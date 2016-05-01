@@ -9,6 +9,10 @@ class timeTable:
 		self.dc_size = dc_size
 		self.tt = [ [0 for _ in range(0,dc_size)] for _ in range(0, dc_size)]
 
+
+	def getSize(self):
+		return self.dc_size
+
 	def getDc_no(self):
 		return self.dc_no
 

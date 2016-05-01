@@ -55,33 +55,5 @@ while True:
 
 	else:
 		print("invalid input")
-s.connect((host, port))
-rep = s.recv(1024)
-print rep
-s.send ("Keep alive")
 
-ans = s.recv(1024)
-kill = 0
-
-if(ans == "200"):
-	print "successful"
-	while True:
-		r = random.randint(0,1)
-		time.sleep(r)
-		
-		if(kill == 6):
-			s.send("kill")
-			print "Killing connection"
-			s.close()
-			break
-
-		else:
-			s.send("safe")
-
-		print s.recv(1024)
-		kill = random.randint(0,20)
-
-else:
-	print "400, unsuccessful"
-	s.close()                     # Close the socket when done
 

@@ -17,15 +17,15 @@ class ClientThread(threading.Thread):
         threading.Thread.__init__(self)
         self.ip = ip
         self.port = port
+        self.c = socket
         print "[+] New thread started for "+ip+":"+str(port)
 
 
     def run(self):    
 
-        global clock,log,clock
+        global clock,log
 
-        rcv = c.recv(2048)
-
+        rcv = c.recv(4096)
         pair = rcv.split("<>")
 
         clock += 1;
