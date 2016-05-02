@@ -1,14 +1,15 @@
 #!/usr/bin/python 
 import socket
 import pickle
+from syncObject import *
+from message import *
 
 class sync:
 
 	def __init__(self, dc_ID ,tt, log_list):
 		self.dc_ID = dc_ID
 		self.tt = tt
-		self.log = log_list
-		process()
+		self.log_list = log_list
 
 	def send(self, host, port):
 		self.host = host
@@ -23,14 +24,4 @@ class sync:
 		s.connect((self.host, self.port))
 		s.send(pickle.dumps(m,0))
 		s.close()
-
-
-
-	def process(self):
-
-		s = self.tt.getSize()
-		table = self.tt.getTable()
-
-		for i in range(0,s):
-			self.log_list[i] = self.log_list[i].getLogsFrom(table[self.dc_no][i])
 

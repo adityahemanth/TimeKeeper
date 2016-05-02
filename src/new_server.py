@@ -4,6 +4,8 @@ import socket, threading
 import time
 import json
 import ast
+import pickle
+import message
 
 log = {}
 dic = {}
@@ -30,6 +32,8 @@ class ClientThread(threading.Thread):
 
         clock += 1;
         if(len(pair) == 1):
+            message = pickle.loads(pair[0])
+            print ("type: ", message.getType())
             del dic[pair[0]]
             c.send("200")
 

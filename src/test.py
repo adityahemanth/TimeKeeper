@@ -1,32 +1,25 @@
-from timetable import *
+from timeTable import *
 from log import log
+from logItem import *
+from message import *
+from sync import *
+from syncObject import *
 
 tt0 = timeTable(3,0)
-tt1 = timeTable(3,1)
-tt2 = timeTable(3,2)
 
 for x in range (0,7):
 	tt0.incrementEntry()
 
-for x in range (0,4):
-	tt1.incrementEntry()
 
-for _ in  range (0,5):
-	tt2.incrementEntry()
-
-tt1.updateTable(tt2)
-tt0.updateTable(tt1)
-
-print tt0.getTable()
-print tt0.getLatest(2);
+log1 = log(1)
+log2 = log(2)
+log3 = log(3)
 
 
-print ("\n\n\n TESTING LOG ITEMS \n\n\n ")
+log_list = [log1, log2, log3]
+host = "127.0.0.1"
+port = 9999
 
-li = logItem(0,5,"This is a post",2)
-
-print li.getUID()
-print li.getPost()
-print li.getDc_no()
-print li.getInfluencerID()
+syn = sync(2, tt0, log_list)
+syn.send(host,port)
 

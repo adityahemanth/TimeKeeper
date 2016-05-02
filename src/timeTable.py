@@ -50,6 +50,9 @@ class timeTable:
 	def incrementEntry(self):
 		self.tt[self.dc_no][self.dc_no] += 1
 
+	def getEntry(self):
+		return self.tt[self.dc_no][self.dc_no]
+
 
 
 
