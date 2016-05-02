@@ -47,11 +47,16 @@ class datacenter:
 
 			elif(mtype == "sync_request"):
 				
-				newDc_no = message.getPayload()
-				new_logs = self.dc_log.getLogsFor(newDc_no)
-				syn = sync(newDc_no, self.tt, new_logs)
-				syn.send()
-				c.send("200")
+				newDc_no = int(message.getPayload())
+
+				if(newDc_no != self.dc_ID)
+					new_logs = self.dc_log.getLogsFor(newDc_no)
+					syn = sync(newDc_no, self.tt, new_logs)
+					syn.send()
+					c.send("200")
+
+				else:
+					c.send("404")
 
 			# server request
 			elif(mtype == "sync"):
@@ -68,6 +73,8 @@ class datacenter:
 
 				c.send("200")
 
+			elif(mtype == "info"):
+				c.send(str(self.dc_ID))
 
 			else:
 				c.send("404")

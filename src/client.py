@@ -1,59 +1,102 @@
 #!/usr/bin/python           # This is client.py file
 
-import time
-import random
-import json
-import threading
+import pickle, message
 import socket               # Import socket module
 
-port = 9999;
+
+def lookup(self, host, port):
+	s = socket.socket() 
+	conn = (host,port)
+
+	msg = message("lookup", None)
+	send = pickle.dumps(msg,0)
+
+	s.connect(conn)
+	s.send(send)
+	rcv = s.recv(4096)
+
+	posts = pickle.loads(rcv)
+	display(posts)
 
 
-def insert(s,host,port):
+def post(self, host, port):
 
-	conn =  (host,port)
-	key = raw_input("key: ")
-	val = raw_input("val: ")
+	u_id = input("Enter User ID: ")
+	pst = input("Enter post: ")
+	p = post(u_id, pst)
 
-	if(key != "" and val != ""):
-		pair = key + "<>" + val
+	msg = message("post", p)
+	send = pickle.dumps(msg,0)
+
+	s.connect(conn)
+	s.send(send)
+	rcv = s.recv(4096)
+	print(rcv)
+
+def sync(self, host, port, current_Dc_no):
+	dc_no = input("Enter DataCenter ID: ")
+
+	if(dc_no != current_Dc_no):
+		msg = message("sync_request", dc_no)
+		send = pickle.dumps(msg,0)
+
 		s.connect(conn)
-		s.send(pair)
-		print s.recv(1024)
-		s.close()
+		s.send(send)
+		rcv = s.recv(4096)
+		print(rcv)
 
 	else:
-		print("Invalid input")
-		insert()
+		print("You cannot sync with your own DataCenter")
 
-def delete(s,host,port):
+def getInfo(self, host, port):
 
-	conn =  (host,port)
-	key = raw_input("key: ")
+	msg = message("info", None)
+	send = pickle.dumps(msg,0)
 
-	if(key != ""):
-		s.connect(conn)
-		s.send(key)
-		print s.recv(1024)
-		s.close()
+	s.connect(conn)
+	s.send(send)
+	rcv = s.recv(4096)
+	return int(rcv)
 
-	else:
-		print("Invalid input")
-		insert()
+def display(posts):
+
+	for post in posts:
+		print("User ID: ", end = "")
+		print(post.getUID())
+
+		print("Post: ", end = "")
+		print(post.getPost())
+		print("\n\n")
 
 
-while True:
-	s = socket.socket()         # Create a socket object
-	host = socket.gethostname() # Get local machine name
-	command = raw_input("$: ")
+def main():
 
-	if(command == 'insert'):
-		insert(s,host,port)
+	ID = input ("$ hostIP: ")
+	port = input("$ port: ")
+	current_Dc_no = getInfo(ID, port)
+	print("Connected to DataCenter: ", end = "")
+	print(current_Dc_no)
 
-	elif(command == 'delete'):
-		delete(s,host,port)
+	while True:
 
-	else:
-		print("invalid input")
+		ipt = input("$ ")
+		if(ipt == "lookup"):
+			lookup(ID, port)
+
+		elif(ipt == "post"):
+			post(ID, port)
+
+		elif(ipt == "sync"):
+			sync(ID, port)
+
+		else:
+			print("invalid input")
+
+
+
+if __name__ == "__main__":
+    main()
+
+
 
 
