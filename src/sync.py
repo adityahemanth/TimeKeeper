@@ -11,17 +11,14 @@ class sync:
 		self.tt = tt
 		self.log_list = log_list
 
-	def send(self, host, port):
-		self.host = host
-		self.port = port
-
+	def send(self, conn):
 
 		#creating a sync object
 		syncObj = syncObject(self.tt, self.log_list) 
 
 		s = socket.socket()
-		m = message("sync", syncObj)
-		s.connect((self.host, self.port))
+		m = message("sync_response", syncObj)
+		s.connect(conn)
 		s.send(pickle.dumps(m,0))
 		s.close()
 

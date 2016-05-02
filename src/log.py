@@ -14,8 +14,8 @@ class log:
 		return self.dc_log
 
 	def isUnique(self,logItem):
-		for item in self.dc_log
-			if(item.equals(logItem))
+		for item in self.dc_log:
+			if(item.equals(logItem)):
 				return False
 
 		return True

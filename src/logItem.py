@@ -10,7 +10,7 @@ class logItem:
 
 
 	def getPostID(self):
-		return post_id
+		return self.post_id
 
 	def getPost(self):
 		return self.post

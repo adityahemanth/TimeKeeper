@@ -1,15 +1,18 @@
 #!/usr/bin/python  
 import pickle, socket
-import message, syncObject
-import timeTable, log, logItem
+from timeTable import timeTable
+from log import log 
+from logItem import *
+from sync import *
+from syncObject import *
+from message import *
+from syncRequest import *
 
 # each data center will have a number.
 class datacenter:
 
-	def __init__(self, dc_ID, port):
+	def __init__(self, dc_ID):
 		self.dc_ID = dc_ID
-		self.port = port
-		self.host = "0.0.0.0"
 		self.tt = timeTable(3, dc_ID)
 		self.posts = []
 		self.dc_log = log(dc_ID)
@@ -45,28 +48,39 @@ class datacenter:
 				self.posts.append(postObj)
 				c.send("200")
 
-			elif(mtype == "sync_request"):
+			elif(mtype == "sync"):
 				
 				newDc_no = int(message.getPayload())
 
-				if(newDc_no != self.dc_ID)
-					new_logs = self.dc_log.getLogsFor(newDc_no)
+				if(newDc_no != self.dc_ID and newDc_no < 4):
+					new_logs = self.dc_log.getLogsFor(self.tt, newDc_no)
 					syn = sync(newDc_no, self.tt, new_logs)
-					syn.send()
+
+					syn.send(self.dc_list[newDc_no])
 					c.send("200")
 
 				else:
 					c.send("404")
 
+			elif(mtype == "sync_request"):
+
+				newDc_no = int(message.getPayload())
+				if(newDc_no != self.dc_ID and newDc_no < 4):
+					synReq = syncRequest(self.dc_list[newDc_no], self.dc_ID)
+					c.send("200")
+
+
+				else:
+					c.send("404")
 			# server request
-			elif(mtype == "sync"):
+			elif(mtype == "sync_response"):
 				
 				syncObj = message.getPayload()
 				logs =  syncObj.getLogs()
 				new_tt = syncObj.getTimeTable()
-				self.tt.update(new_tt)
+				self.tt.updateTable(new_tt)
 
-				for item in logs
+				for item in logs:
 					if(self.dc_log.isUnique(item)):
 						self.dc_log.append(item)
 						self.posts.append(item.getPost())
@@ -79,14 +93,19 @@ class datacenter:
 			else:
 				c.send("404")
 
-			print mtype
+			print (mtype, addr)
 			c.close()
+
+	def config(self):
+		self.dc_list = input("Input config: ")
+		(self.host, self.port) = self.dc_list[self.dc_ID]
+
 
 def main():
 
 	ID = input ("$ datacenter ID: ")
-	port = input("$ port: ")
-	dc = datacenter(ID,port)
+	dc = datacenter(ID)
+	dc.config()
 	dc.listen()
 
 
