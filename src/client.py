@@ -27,8 +27,8 @@ def postto(host, port):
 	s = socket.socket() 
 	conn = (host,port)
 
-	u_id = raw_input("Enter User ID: ")
-	pst = raw_input("Enter post: ")
+	u_id = input("Enter User ID: ")
+	pst = input("Enter post: ")
 	p = post(u_id, pst)
 
 	msg = message("post", p)
@@ -40,7 +40,7 @@ def postto(host, port):
 	print(rcv)
 
 def sync(host, port, current_Dc_no):
-	dc_no = raw_input("Enter DataCenter ID: ")
+	dc_no = input("Enter DataCenter ID: ")
 	s = socket.socket() 
 	conn = (host,port)
 
@@ -83,16 +83,16 @@ def display(posts):
 
 def main():
 
-	ID = raw_input ("$ hostIP: ")
-	port = raw_input("$ port: ")
+	ID = input ("$ hostIP: ")
+	port = input("$ port: ")
 	port = int(port)
-	current_Dc_no = getInfo(ID, port)
+	current_Dc_no = getInfo(str(ID), port)
 	print("Connected to DataCenter: ", end = "")
 	print(current_Dc_no)
 
 	while True:
 
-		ipt = raw_input("$ ")
+		ipt = input("$ ")
 		if(ipt == "lookup"):
 			lookup(ID, port)
 

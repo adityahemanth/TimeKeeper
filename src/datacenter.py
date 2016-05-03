@@ -12,13 +12,14 @@ from syncRequest import *
 class datacenter:
 
 	def __init__(self, dc_ID):
-		self.dc_ID = dc_ID
+		self.dc_ID = int(dc_ID)
 		self.tt = timeTable(3, dc_ID)
 		self.posts = []
 		self.dc_log = log(dc_ID)
 		# self.listen()
 
 	def listen(self):
+		
 		tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -99,15 +100,25 @@ class datacenter:
 	def config(self):
 		self.dc_list = input("Input config: ")
 		(self.host, self.port) = self.dc_list[self.dc_ID]
-
+		
+	def setDcList(self,dc_list):
+		self.dc_list = dc_list
+		(self.host, self.port) = self.dc_list[self.dc_ID]
+		
+	def setHost(self,host):
+		self.host=host
+	def setPort(self,port):
+		self.port=port
 
 def main():
 
 	ID = input ("$ datacenter ID: ")
 	dc = datacenter(ID)
-	dc.config()
+	#dc.config()
+	#dc.setDcList([(str("0.0.0.0"),int(10000))])
+	dc.setHost("0.0.0.0")
+	dc.setPort(10000)
 	dc.listen()
-
 
 
 if __name__ == "__main__":
