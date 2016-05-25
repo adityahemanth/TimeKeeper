@@ -13,9 +13,9 @@ class datacenter:
 
 	def __init__(self, dc_ID):
 		self.dc_ID = int(dc_ID)
-		self.tt = timeTable(3, dc_ID)
+		self.tt = timeTable(3, self.dc_ID)
 		self.posts = []
-		self.dc_log = log(dc_ID)
+		self.dc_log = log(self.dc_ID)
 		# self.listen()
 
 	def listen(self):
@@ -98,12 +98,13 @@ class datacenter:
 			c.close()
 
 	def config(self):
-		self.dc_list = input("Input config: ")
-		(self.host, self.port) = self.dc_list[self.dc_ID]
-		
+		self.dc_list = input("Input config:")
+		print(self.dc_list)
+		print(self.dc_ID)
+		(self.host,self.port) = self.dc_list[self.dc_ID]		
 	def setDcList(self,dc_list):
 		self.dc_list = dc_list
-		(self.host, self.port) = self.dc_list[self.dc_ID]
+		(self.host,self.port) = self.dc_list[self.dc_ID]
 		
 	def setHost(self,host):
 		self.host=host
@@ -112,14 +113,13 @@ class datacenter:
 
 def main():
 
-	ID = input ("$ datacenter ID: ")
+	ID = input ("$ datacenter ID:")
 	dc = datacenter(ID)
-	#dc.config()
+	dc.config()
 	#dc.setDcList([(str("0.0.0.0"),int(10000))])
-	dc.setHost("0.0.0.0")
-	dc.setPort(10000)
+	#dc.setHost('0.0.0.0')
+	#dc.setPort(10000)
 	dc.listen()
-
 
 if __name__ == "__main__":
     main()
