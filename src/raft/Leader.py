@@ -1,9 +1,13 @@
 from StateController import StateController
+from RequestVoteRPCReply import RequestVoteRPCReply 
+from RequestVoteRPC import RequestVoteRPC 
+from AppendEntriesRPCReply import AppendEntriesRPCReply
 from AppendEntriesRPC import AppendEntriesRPC
 from Sender import Sender
 from Receiver import Receiver
 class Leader(StateController,Receiver):
     def reset(self):
+        self.onPeriodEnd()
         self.setTimer()
         self.resetNextIndex()
         
@@ -41,7 +45,7 @@ class Leader(StateController,Receiver):
         for dcNum in range(self.numOfDC):
             if(self.isSelf(dcNum)):
                 continue
-            if(self.isMatched(dcNum)):
+            if(self.matchIndex[dcNum]!=0):
                 sender=Sender('AppendEntriesRPC',self.entry(dcNum))
                 sender.send(self.dc_list[dcNum])
             else:
@@ -51,13 +55,15 @@ class Leader(StateController,Receiver):
     def isSelf(self,dcNum):
         return (self.dc_ID==dcNum)
     
-    def isMatched(self,dcNum):
-        return (self.matchIndex[dcNum]!=0)
-    
     def onRecAppendEntriesRPCReply(self,message):
         
-        if(message.matchIndex==0):
+        if(not message.success):
             self.decrementNextIndex(message.followerId)
+            print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Retry AppendEntriesRPC to datacenter '+\
+                  str(message.followerId))
+            sender=Sender('AppendEntriesRPC',self.heartbeat(message.followerId))
+            sender.send(self.dc_list[message.followerId])            
+            self.setPeriod()
         else:
             self.setMatchIndex(message.followerId, message.matchIndex)
             self.incrementNextIndex(message.followerId)

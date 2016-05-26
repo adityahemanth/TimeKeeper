@@ -1,5 +1,6 @@
 from StateController import StateController
 from Sender import Sender
+from AppendEntriesRPC import AppendEntriesRPC
 from RequestVoteRPC import RequestVoteRPC
 from Follower import Follower
 from AppendEntriesRPCReply import AppendEntriesRPCReply
@@ -9,6 +10,7 @@ from Receiver import Receiver
 
 class Candidate(StateController,Receiver):
     def reset(self):
+        self.onPeriodEnd()
         self.setTimer()
         self.resetvoteCount()
         self.resetReceiverList()

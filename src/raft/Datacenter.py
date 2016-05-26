@@ -45,6 +45,8 @@ class Datacenter(StateController):
             self.stepDown(message)
             if(self.isTimeout(time.time())):
                 self.onTimeout()
+            if(self.periodEnd(time.time())):
+                self.onPeriodEnd()
             
             if(self.eql(mtype,'AppendEntriesRPC')):
                 self.onRecAppendEntriesRPC(message)
@@ -56,13 +58,13 @@ class Datacenter(StateController):
                 self.onRecReqVoteRPCReply(message)
             else:
                 print('Invalid message type!!!')  
-        
+            
+            
     def config(self):
         self.dc_list = input("Input config:")
         print(self.dc_list)
         print(self.dc_ID)
         (self.host,self.port) = self.dc_list[self.dc_ID]      
-          
     def setDcList(self,dc_list):
         self.dc_list = dc_list
         (self.host,self.port) = self.dc_list[self.dc_ID]
@@ -71,7 +73,20 @@ class Datacenter(StateController):
         self.host=host
     def setPort(self,port):
         self.port=port
+    
+def main():
         
+    ID = input ("$ datacenter ID:")
+    numOfDC = input ("$ datacenter number:")
+    timeUnit = input ("$ timeUnit:")
+    
+    dc = Datacenter(ID,numOfDC,timeUnit)
+    dc.config()
+    dc.listen()
+        
+    if __name__ == "__main__":
+        main()
+    
         
 
         
