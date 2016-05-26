@@ -5,6 +5,7 @@ from Leader import Leader
 from Receiver import Receiver
 from Datacenter import Datacenter
 from Sender import Sender
+from time import time
 class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
     
     def setState(self,state):
@@ -12,7 +13,23 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
         
     def setTimer(self):
         self.waitTime=self.timeUnit*random.random()+self.timeUnit
+        self.start=time.time()
         
+    def isTimeout(self,currentTime):
+        if(self.eql(self.state,'leader')):
+            return False
+        
+        elapse=self.currentTime-self.start
+        return (elapse>=self.waitTime)
+    
+    def onTimeout(self):
+        if(self.eql(self.state,'follower')):
+            Follower.onTimeout(self)
+        elif(self.eql(self.state,'candidate')):
+            Candidate.onTimeout(self)
+        else:
+            pass
+    
     def stepDown(self,message):
         if(message.term>self.currentTerm and (not self.eql(self.State,'follower'))):
             self.setState('follower')
@@ -20,7 +37,7 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
             return True
         else:
             return False
-        
+    
     def reset(self):
         if(self.eql(self.state,'follower')):
             pass
@@ -31,8 +48,8 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
         else:
             print('Wrong Resetting!!!')    
     
-    def onRecAppendEntriesRPC(self,state,message):
-        if(self.eql(state,'follower')):
+    def onRecAppendEntriesRPC(self,message):
+        if(self.eql(self.state,'follower')):
             reply=Follower.onRecAppendEntriesRPC(self, message)
         else:
             reply=Receiver.onRecAppendEntriesRPC(self, message)
@@ -40,8 +57,8 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
         sender=Sender('AppendEntriesRPCReply',reply)
         sender.send(self.dc_list[message.leaderId])  
     
-    def onRecReqVoteRPC(self,state,message):
-        if(self.eql(state,'follower')):
+    def onRecReqVoteRPC(self,message):
+        if(self.eql(self.state,'follower')):
             reply=Follower.onRecReqVoteRPC(self, message)
         else:
             reply=Receiver.onRecReqVoteRPC(self, message)

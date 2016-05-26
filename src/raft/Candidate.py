@@ -63,7 +63,8 @@ class Candidate(StateController,Receiver):
     
     def onMajorityGranted(self):
         self.setState('leader')
-        self.reset()
+        StateController.reset()
     
     def onTimeout(self):
-        self.reset()
+        StateController.reset()
+    

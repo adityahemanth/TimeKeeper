@@ -5,20 +5,24 @@ Created on 25 May 2016
 '''
 from StateController import StateController
 import socket,pickle
+from Follower import Follower
+from time import time
 
 class Datacenter(StateController):
     
     def __init__(self,id,numOfDC,majorityNum,timeUnit):
-        self.currentTerm=1
         self.log=[]
         self.commitIndex=-1
         self.lastApplied=-1
-        self.state='follower'
+        
         self.id=id
         self.numOfDC=numOfDC
         self.majorityNum=majorityNum
         self.timeUnit=timeUnit
-    
+        
+        self.state='follower'
+        Follower.reset(1)
+        
     def listen(self):
         
         tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,13 +39,15 @@ class Datacenter(StateController):
             mtype = message.getType() 
             
             self.stepDown(message)
+            if(self.isTimeout(time.time())):
+                self.onTimeout()
             
             if(self.eql(mtype,'AppendEntriesRPC')):
-                self.onRecAppendEntriesRPC(self.state, message)
+                self.onRecAppendEntriesRPC(message)
             elif(self.eql(mtype,'AppendEntriesRPCReply')):
                 self.onRecAppendEntriesRPCReply(message)
             elif(self.eql(mtype,'RequestVoteRPC')):
-                self.onRecReqVoteRPC(self.state, message)
+                self.onRecReqVoteRPC(message)
             elif(self.eql(mtype,'RequestVoteRPCReply')):
                 self.onRecReqVoteRPCReply(message)
             else:
