@@ -84,7 +84,6 @@ class Follower(StateController,Candidate):
         
     def onTimeout(self):
         self.setState('candidate')
-        self.setTimer()
         StateController.reset()
     
     

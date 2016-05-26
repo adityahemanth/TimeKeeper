@@ -4,6 +4,7 @@ from Sender import Sender
 from Receiver import Receiver
 class Leader(StateController,Receiver):
     def reset(self):
+        self.setTimer()
         self.resetNextIndex()
         
     def resetNextIndex(self):
