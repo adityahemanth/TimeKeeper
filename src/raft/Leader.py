@@ -1,8 +1,8 @@
-from ServerState import ServerState
+from StateController import StateController
 from AppendEntriesRPC import AppendEntriesRPC
 from Sender import Sender
 from Receiver import Receiver
-class Leader(ServerState,Receiver):
+class Leader(StateController,Receiver):
     def reset(self):
         self.resetNextIndex()
         

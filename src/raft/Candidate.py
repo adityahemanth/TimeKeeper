@@ -1,4 +1,4 @@
-from ServerState import ServerState
+from StateController import StateController
 from Sender import Sender
 from RequestVoteRPC import RequestVoteRPC
 from Follower import Follower
@@ -7,7 +7,7 @@ from Leader import Leader
 from RequestVoteRPCReply import RequestVoteRPCReply
 from Receiver import Receiver
 
-class Candidate(ServerState,Receiver):
+class Candidate(StateController,Receiver):
     def reset(self):
         self.setTimer()
         self.resetvoteCount()

@@ -1,4 +1,4 @@
-from ServerState import ServerState
+from StateController import StateController
 from RequestVoteRPCReply import RequestVoteRPCReply 
 from RequestVoteRPC import RequestVoteRPC 
 from AppendEntriesRPCReply import AppendEntriesRPCReply
@@ -6,7 +6,7 @@ from AppendEntriesRPC import AppendEntriesRPC
 import random
 from Candidate import Candidate
 
-class Follower(ServerState,Candidate):
+class Follower(StateController,Candidate):
     
     def reset(self,term):
         self.setTimer()
