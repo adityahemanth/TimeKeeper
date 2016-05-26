@@ -10,9 +10,9 @@ class Receiver(object):
     
     def onRecReqVoteRPC(self, message):
         votedGranted=False
-        return RequestVoteRPCReply(self.currentTerm,votedGranted,self.id)
+        return RequestVoteRPCReply(self.currentTerm,votedGranted,self.dc_ID)
     
     def onRecAppendEntriesRPC(self,message):
         success=False
-        return AppendEntriesRPCReply(self.currentTerm,success,self.id,-1)
+        return AppendEntriesRPCReply(self.currentTerm,success,self.dc_ID,-1)
     

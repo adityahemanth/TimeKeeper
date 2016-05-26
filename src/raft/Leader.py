@@ -9,8 +9,8 @@ class Leader(StateController,Receiver):
         
     def resetNextIndex(self):
         for dcNum in range(self.numOfDC):
-            self.nextIndex[dcNum]=len(self.log)
-            self.matchIndex[dcNum]=-1
+            self.nextIndex[dcNum]=self.log.getLastIndex()+1
+            self.matchIndex[dcNum]=0
     
     def decrementNextIndex(self,dcNum):
         self.nextIndex[dcNum]=self.nextIndex[dcNum]-1
@@ -24,16 +24,16 @@ class Leader(StateController,Receiver):
     def heartbeat(self,dcNum):
         
         return AppendEntriesRPC(self.currentTerm,\
-                                self.id,self.nextIndex[dcNum]-1,\
-                                self.log[self.nextIndex[dcNum]-1],\
-                                [],self.commitIndex)
+                                self.dc_ID,self.nextIndex[dcNum]-1,\
+                                self.log.getTerm(self.nextIndex[dcNum]-1),\
+                                None,self.commitIndex)
     
     def entry(self,dcNum):
         
         return AppendEntriesRPC(self.currentTerm,\
-                                self.id,self.nextIndex[dcNum]-1,\
-                                self.log[self.nextIndex[dcNum]-1],\
-                                self.log[self.nextIndex[dcNum]],\
+                                self.dc_ID,self.nextIndex[dcNum]-1,\
+                                self.log.getTerm(self.nextIndex[dcNum]-1),\
+                                self.log.getLogItem(self.nextIndex[dcNum]),\
                                 self.commitIndex)
     
     def sendAppendEntriesRPC(self):
@@ -49,14 +49,14 @@ class Leader(StateController,Receiver):
                 sender.send(self.dc_list[dcNum])            
             
     def isSelf(self,dcNum):
-        return (self.id==dcNum)
+        return (self.dc_ID==dcNum)
     
     def isMatched(self,dcNum):
-        return (self.matchIndex[dcNum]!=-1)
+        return (self.matchIndex[dcNum]!=0)
     
     def onRecAppendEntriesRPCReply(self,message):
         
-        if(message.matchIndex==-1):
+        if(message.matchIndex==0):
             self.decrementNextIndex(message.followerId)
         else:
             self.setMatchIndex(message.followerId, message.matchIndex)

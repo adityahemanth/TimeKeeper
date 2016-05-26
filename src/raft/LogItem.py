@@ -8,3 +8,12 @@ class LogItem:
         self.post=post
         self.term=term
         self.index=index
+        
+    def getTerm(self):
+        return self.term
+    
+    def getIndex(self):
+        return self.index
+    
+    def getPost(self):
+        return self.post

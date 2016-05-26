@@ -39,11 +39,11 @@ class Follower(StateController,Candidate):
                 self.votedFor=None
                 voteGranted=False
         
-        return RequestVoteRPCReply(self.currentTerm,voteGranted,self.id)
+        return RequestVoteRPCReply(self.currentTerm,voteGranted,self.dc_ID)
     
     def isComplete(self,message):
-        self.lastLogIndex=len(self.log)-1
-        self.lastLogTerm=self.log[self.lastLogIndex]
+        self.lastLogIndex=self.log.getLastIndex()
+        self.lastLogTerm=self.log.getLastTerm()
         
         if(self.lastLogTerm>message.lastLogTerm or \
            ((self.lastLogTerm==message.lastLogTerm) and \
@@ -55,29 +55,29 @@ class Follower(StateController,Candidate):
     def onRecAppendEntriesRPC(self,message):
         if(message.term<self.currentTerm):
             success=False
-            matchIndex=-1
+            matchIndex=0
         else:
             self.currentTerm=message.term
             self.setTimer()
             if(self.isMatched(message)):
                 self.log.append(message.entry)
-                matchIndex=len(self.log)-1
+                matchIndex=self.log.getLastIndex()
                 success=True
             else:
-                times=len(self.log)-message.prevLogIndex
+                times=self.log.getLastIndex()-message.prevLogIndex+1
                 if(times>0):
                     for i in range(times):
-                        del self.log[len(self.log)-1]
+                        self.log.deleteLogItem()
                 
-                matchIndex=-1
+                matchIndex=0
                 success=False 
                 
-        return AppendEntriesRPCReply(self.currentTerm,success,matchIndex,self.id)
+        return AppendEntriesRPCReply(self.currentTerm,success,matchIndex,self.dc_ID)
             
     def isMatched(self,message):
-        if(message.prevLogIndex>len(self.log)-1):
+        if(message.prevLogIndex>self.log.getLastIndex()):
             return False
-        elif(self.log[message.prevLogIndex]!=message.prevLogTerm):
+        elif(not self.eql(self.log.getTerm(message.prevLogIndex),message.prevLogTerm)):
             return False
         else:
             return True        

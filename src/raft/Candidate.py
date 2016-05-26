@@ -26,15 +26,15 @@ class Candidate(StateController,Receiver):
     def incrementTerm(self):
         self.currentTerm=self.currentTerm+1
     def voteForSelf(self):
-        self.votedFor=self.id
-        self.receiverList[self.id]=False
+        self.votedFor=self.dc_ID
+        self.receiverList[self.dc_ID]=False
         self.incrementVoteCount()
         
     def sendReqVoteRPC(self):
-        lastLogIndex=len(self.log)-1
-        lastLogTerm=self.log([lastLogIndex])
+        lastLogIndex=self.log.getLastIndex()
+        lastLogTerm=self.log.getLastTerm()
         
-        reqRPC=RequestVoteRPC(self.term,self.id,lastLogIndex,lastLogTerm)
+        reqRPC=RequestVoteRPC(self.term,self.dc_ID,lastLogIndex,lastLogTerm)
         
         for dcNum in range(self.numOfDC):
             if(self.receiverList[dcNum]):

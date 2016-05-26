@@ -7,20 +7,24 @@ from StateController import StateController
 import socket,pickle
 from Follower import Follower
 from time import time
+from math import ceil
+from Log import Log
+import LogItem
 
 class Datacenter(StateController):
     
-    def __init__(self,id,numOfDC,majorityNum,timeUnit):
-        self.log=[]
+    def __init__(self,dc_ID,numOfDC,timeUnit):
+        
         self.commitIndex=-1
         self.lastApplied=-1
         
-        self.id=id
+        self.dc_ID=dc_ID
         self.numOfDC=numOfDC
-        self.majorityNum=majorityNum
+        self.majorityNum=ceil(1.0*self.numOfDC/2.0)
         self.timeUnit=timeUnit
         
         self.state='follower'
+        self.log=Log()
         Follower.reset(1)
         
     def listen(self):

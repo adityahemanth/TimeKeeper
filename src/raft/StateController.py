@@ -23,10 +23,13 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
         return (elapse>=self.waitTime)
     
     def onTimeout(self):
+        print("("+self.state+","+str(self.currentTerm)+'): Time out!')
         if(self.eql(self.state,'follower')):
             Follower.onTimeout(self)
+            print("("+self.state+","+str(self.currentTerm)+'): State Switch to Candidate')
         elif(self.eql(self.state,'candidate')):
             Candidate.onTimeout(self)
+            print("("+self.state+","+str(self.currentTerm)+'): Increment Term')
         else:
             pass
     
@@ -34,6 +37,7 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
         if(message.term>self.currentTerm and (not self.eql(self.State,'follower'))):
             self.setState('follower')
             Follower.reset(message.term)
+            print("("+self.state+","+str(self.currentTerm)+'): Step down...State Switch to Follower')
             return True
         else:
             return False
@@ -44,11 +48,15 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
         elif(self.eql(self.state,'candidate')):
             Candidate.reset(self)
         elif(self.eql(self.state,'leader')):
+            print("("+self.state+","+str(self.currentTerm)+'): State Switch to Leader')
             Leader.reset(self)
         else:
             print('Wrong Resetting!!!')    
     
     def onRecAppendEntriesRPC(self,message):
+        print("("+self.state+","+str(self.currentTerm)+'): Receive AppendEntriesRPC from datacenter '+\
+              str(message.leaderId))
+        
         if(self.eql(self.state,'follower')):
             reply=Follower.onRecAppendEntriesRPC(self, message)
         else:
@@ -58,6 +66,9 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
         sender.send(self.dc_list[message.leaderId])  
     
     def onRecReqVoteRPC(self,message):
+        print("("+self.state+","+str(self.currentTerm)+'): Receive ReqVoteRPC from datacenter '+\
+              str(message.candidateId))
+        
         if(self.eql(self.state,'follower')):
             reply=Follower.onRecReqVoteRPC(self, message)
         else:
@@ -67,15 +78,25 @@ class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
         sender.send(self.dc_list[message.candidateId])
     
     def onRecAppendEntriesRPCReply(self,message):
+        print("("+self.state+","+str(self.currentTerm)+'): Receive AppendEntriesRPCReply from datacenter '+\
+              str(message.followerId))
+        
         Leader.onRecAppendEntriesRPCReply(self,message)  
     
     def onRecReqVoteRPCReply(self,message):
+        print("("+self.state+","+str(self.currentTerm)+'): Receive ReqVoteRPCReply from datacenter '+\
+              str(message.voterId))
+        
         Candidate.onRecReqVoteRPCReply(self,message)    
     
     def sendAppendEntriesRPC(self):
+        print("("+self.state+","+str(self.currentTerm)+'): Send AppendEntriesRPCReply')
+        
         Leader.sendAppendEntriesRPC(self)
     
     def sendReqVoteRPC(self):
+        print("("+self.state+","+str(self.currentTerm)+'): Send ReqVoteRPCReply')
+        
         Candidate.sendReqVoteRPC(self)
     
     def eql(self,a,b):
