@@ -30,12 +30,12 @@ class timeTable:
 		dc_no2 = tt2.getDc_no()
 		tt2 = tt2.getTable()
  
-		for i in range(0, self.dc_size):
-			self.tt[self.dc_no][i] = max(tt2[dc_no2][i], self.tt[self.dc_no][i])
+		for dcNum in range(0, self.dc_size):
+			self.tt[self.dc_no][dcNum] = max(tt2[dc_no2][dcNum], self.tt[self.dc_no][dcNum])
 
-		for i in range(0, self.dc_size):
+		for dcNum in range(0, self.dc_size):
 			for j in range(0, self.dc_size):
-				self.tt[i][j] = max(self.tt[i][j], tt2[i][j])
+				self.tt[dcNum][j] = max(self.tt[dcNum][j], tt2[dcNum][j])
 
 
 	# gets the latest info about a datacenter

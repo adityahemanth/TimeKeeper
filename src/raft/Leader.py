@@ -4,9 +4,18 @@ from Sender import Sender
 class Leader(ServerState):
     
     def resetNextIndex(self):
-        for i in range(self.numOfDC):
-            self.nextIndex[i]=len(self.log)
-            self.matchIndex[i]=-1
+        for dcNum in range(self.numOfDC):
+            self.nextIndex[dcNum]=len(self.log)
+            self.matchIndex[dcNum]=-1
+    
+    def decrementNextIndex(self,dcNum):
+        self.nextIndex[dcNum]=self.nextIndex[dcNum]-1
+    
+    def incrementNextIndex(self,dcNum):
+        self.nextIndex[dcNum]=self.nextIndex[dcNum]+1
+    
+    def setMatchIndex(self,dcNum,matchIndex):
+        self.matchIndex[dcNum]=matchIndex
     
     def heartbeat(self,dcNum):
         
@@ -44,7 +53,23 @@ class Leader(ServerState):
     def onRecAppendEntriesRPCReply(self,message):
         ServerState.onRecMessage()
         
-        if()
+        if(message.matchIndex==-1):
+            self.decrementNextIndex(message.followerId)
+        else:
+            self.setMatchIndex(message.followerId, message.matchIndex)
+            self.incrementNextIndex(message.followerId)
+            if(message.matchIndex>self.commitIndex):
+                self.checkCommit(message.matchIndex)
+    
+    def checkCommit(self,N):
+        count=0
+        for dcNum in range(self.numOfDC):
+            if(self.matchIndex[dcNum]>=N or self.isSelf(dcNum)): 
+                count=count+1
+        
+        if(count>=self.majorityNum and self.log[N]==self.currentTerm):
+            self.commitIndex=N
+    
         
         
         

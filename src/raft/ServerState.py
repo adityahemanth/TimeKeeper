@@ -24,3 +24,8 @@ class ServerState:
         
     def setTimer(self):
         self.waitTime=self.timeUnit*random.random()+self.timeUnit
+        
+    def onRecMessage(self,message):
+        if(message.term>self.currentTerm):
+            self.setState('follower')
+        

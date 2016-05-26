@@ -61,12 +61,12 @@ class Follower(ServerState):
             return False
         elif(self.log[message.prevLogIndex]!=message.prevLogTerm):
             times=len(self.log)-message.prevLogIndex
-            for i in range(times):
+            for dcNum in range(times):
                 del self.log[len(self.log)-1] 
             return False
         else:
-            for i in range(len(message.entries)):
-                self.log.append(message.entries[i])
+            for dcNum in range(len(message.entries)):
+                self.log.append(message.entries[dcNum])
             
             if(message.leaderCommit>self.commitIndex):
                 self.commitIndex=min(len(self.log)-1,message.leaderCommit)

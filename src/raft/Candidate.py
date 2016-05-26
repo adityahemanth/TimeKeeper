@@ -7,7 +7,7 @@ class Candidate(ServerState,Follower):
     def resetvoteCount(self):
         self.voteCount=0
     def resetReceiverList(self):
-        for i in range(self.numOfDC):
+        for dcNum in range(self.numOfDC):
             self.receiverList.append(True)
     
     def incrementVoteCount(self):
@@ -30,10 +30,10 @@ class Candidate(ServerState,Follower):
         
         reqRPC=RequestVoteRPC(self.term,self.id,lastLogIndex,lastLogTerm)
         
-        for i in range(self.numOfDC):
-            if(self.receiverList[i]):
+        for dcNum in range(self.numOfDC):
+            if(self.receiverList[dcNum]):
                 sender=Sender('RequestVoteRPC',reqRPC)
-                sender.send(self.dc_list[i])
+                sender.send(self.dc_list[dcNum])
     
     def onRecReqVoteRPCReply(self,message):
         if(message.term>self.term):
