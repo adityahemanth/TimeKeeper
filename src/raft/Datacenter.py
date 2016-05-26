@@ -61,13 +61,22 @@ class Datacenter(StateController):
             
             
     def config(self):
-        self.dc_list = input("Input config:")
+        elements=self.inputList("Input config:")
+        self.dc_list = list(elements)
         print(self.dc_list)
         print(self.dc_ID)
         (self.host,self.port) = self.dc_list[self.dc_ID]      
     def setDcList(self,dc_list):
         self.dc_list = dc_list
         (self.host,self.port) = self.dc_list[self.dc_ID]
+    def inputList(yourComment):
+        listSTR=input(yourComment)     
+        listSTR =listSTR[1:len(listSTR)-1]
+        listT = listSTR.split(",")
+        listEnd=[]
+        for caseListT in listT:
+            listEnd.append(int(caseListT))
+        return listEnd
         
     def setHost(self,host):
         self.host=host
