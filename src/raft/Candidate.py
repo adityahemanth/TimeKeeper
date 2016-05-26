@@ -3,7 +3,18 @@ from Sender import Sender
 from RequestVoteRPC import RequestVoteRPC
 from Follower import Follower
 from AppendEntriesRPCReply import AppendEntriesRPCReply
-class Candidate(ServerState,Follower):
+from Leader import Leader
+from RequestVoteRPCReply import RequestVoteRPCReply
+from Receiver import Receiver
+
+class Candidate(ServerState,Receiver):
+    def reset(self):
+        self.setTimer()
+        self.resetvoteCount()
+        self.resetReceiverList()
+        self.voteForSelf()
+        self.incrementTerm()
+    
     def resetvoteCount(self):
         self.voteCount=0
     def resetReceiverList(self):
@@ -18,11 +29,6 @@ class Candidate(ServerState,Follower):
         self.votedFor=self.id
         self.receiverList[self.id]=False
         self.incrementVoteCount()
-    def isMajorityGranted(self):
-        if(self.voteCount>=self.majorityNum):
-            return True
-        else:
-            return False
         
     def sendReqVoteRPC(self):
         lastLogIndex=len(self.log)-1
@@ -36,29 +42,28 @@ class Candidate(ServerState,Follower):
                 sender.send(self.dc_list[dcNum])
     
     def onRecReqVoteRPCReply(self,message):
-        if(message.term>self.term):
-            self.setState('follower')
-            return
-        elif(message.term==self.term):
+    
+        if(message.term==self.term):
             if(message.voteGranted):
                 self.receiverList[message.voterId]=False
                 self.incrementVoteCount()
             else:
                 pass
-        else:
+        elif(message.term<self.term):
             pass
         
         if(self.isMajorityGranted()):
-            self.setState('leader')
-    
-    def onRecReqVoteRPC(self, message):
-        return Follower.onRecReqVoteRPC(self, message)
-    
-    def onRecAppendEntriesRPC(self,message):
-        if(message.term>=self.term):
-            self.setState('follower')
-            return super(Candidate,self).onRecAppendEntriesRPC(message)
+            self.onMajorityGranted()
+            
+    def isMajorityGranted(self):
+        if(self.voteCount>=self.majorityNum):
+            return True
         else:
-            success=False
-            return AppendEntriesRPCReply(self.currentTerm,success)
+            return False
     
+    def onMajorityGranted(self):
+        self.setState('leader')
+        self.reset()
+    
+    def onTimeout(self):
+        self.reset()

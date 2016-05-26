@@ -4,9 +4,18 @@ from RequestVoteRPC import RequestVoteRPC
 from AppendEntriesRPCReply import AppendEntriesRPCReply
 from AppendEntriesRPC import AppendEntriesRPC
 import random
+from Candidate import Candidate
 
-class Follower(ServerState):
+class Follower(ServerState,Candidate):
+    
+    def reset(self,term):
+        self.setTimer()
+        self.currentTerm=term
+        self.resetVotedFor()
         
+    def resetVotedFor(self):
+        self.votedFor=None
+    
     def onRecReqVoteRPC(self,message):
         if (message.term<self.currentTerm):
             voteGranted=False
@@ -30,7 +39,7 @@ class Follower(ServerState):
                 self.votedFor=None
                 voteGranted=False
         
-        return RequestVoteRPCReply(self.currentTerm,voteGranted)
+        return RequestVoteRPCReply(self.currentTerm,voteGranted,self.id)
     
     def isComplete(self,message):
         self.lastLogIndex=len(self.log)-1
@@ -44,38 +53,37 @@ class Follower(ServerState):
             return True
     
     def onRecAppendEntriesRPC(self,message):
-        if (message.term<self.currentTerm):
+        if(message.term<self.currentTerm):
             success=False
-        elif(message.term==self.currentTerm):
-            self.setTimer()
-            success=self.isMatched(message)
+            matchIndex=-1
         else:
-            self.setTimer()
             self.currentTerm=message.term
-            success=self.isMatched(message)
-        
-        return AppendEntriesRPCReply(self.currentTerm,success)
+            self.setTimer()
+            if(self.isMatched(message)):
+                self.log.append(message.entry)
+                matchIndex=len(self.log)-1
+                success=True
+            else:
+                times=len(self.log)-message.prevLogIndex
+                if(times>0):
+                    for i in range(times):
+                        del self.log[len(self.log)-1]
+                
+                matchIndex=-1
+                success=False 
+                
+        return AppendEntriesRPCReply(self.currentTerm,success,matchIndex,self.id)
             
     def isMatched(self,message):
         if(message.prevLogIndex>len(self.log)-1):
             return False
         elif(self.log[message.prevLogIndex]!=message.prevLogTerm):
-            times=len(self.log)-message.prevLogIndex
-            for dcNum in range(times):
-                del self.log[len(self.log)-1] 
             return False
         else:
-            for dcNum in range(len(message.entries)):
-                self.log.append(message.entries[dcNum])
-            
-            if(message.leaderCommit>self.commitIndex):
-                self.commitIndex=min(len(self.log)-1,message.leaderCommit)
             return True        
         
-    def setTimer(self):
-        self.waitTime=self.timeUnit*random.random()+self.timeUnit
-    
-    def 
-       if(timeOut()): 
-           self.setState('candidate')
+    def onTimeout(self):
+        self.setState('candidate')
+        self.setTimer()
+        self.reset()
     

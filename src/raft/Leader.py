@@ -1,8 +1,11 @@
 from ServerState import ServerState
 from AppendEntriesRPC import AppendEntriesRPC
 from Sender import Sender
-class Leader(ServerState):
-    
+from Receiver import Receiver
+class Leader(ServerState,Receiver):
+    def reset(self):
+        self.resetNextIndex()
+        
     def resetNextIndex(self):
         for dcNum in range(self.numOfDC):
             self.nextIndex[dcNum]=len(self.log)
@@ -51,7 +54,6 @@ class Leader(ServerState):
         return (self.matchIndex[dcNum]!=-1)
     
     def onRecAppendEntriesRPCReply(self,message):
-        ServerState.onRecMessage()
         
         if(message.matchIndex==-1):
             self.decrementNextIndex(message.followerId)
@@ -70,6 +72,12 @@ class Leader(ServerState):
         if(count>=self.majorityNum and self.log[N]==self.currentTerm):
             self.commitIndex=N
     
+    def onRecAppendEntriesRPC(self, message):
+        Receiver.onRecAppendEntriesRPC(message)
+    
+    def onRecReqVoteRPC(self, message):
+        Receiver.onRecReqVoteRPC(message)
+    
         
-        
+    
         
