@@ -1,7 +1,7 @@
 import random
 class ServerState:
     
-    def __init__(self,currentTerm,votedFor,log,commitIndex,lastApplied,state,id,timeUnit):
+    def __init__(self,currentTerm,votedFor,log,commitIndex,lastApplied,state,id,numOfDC,majorityNum,timeUnit):
         self.currentTerm=currentTerm
         self.votedFor=votedFor
         self.log=log
@@ -9,6 +9,8 @@ class ServerState:
         self.lastApplied=lastApplied
         self.state=state
         self.id=id
+        self.numOfDC=numOfDC
+        self.majorityNum=majorityNum
         self.timeUnit=timeUnit
     
     def setCommitIndex(self,commitIndex):

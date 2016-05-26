@@ -51,6 +51,9 @@ class Candidate(ServerState,Follower):
         if(self.isMajorityGranted()):
             self.setState('leader')
     
+    def onRecReqVoteRPC(self, message):
+        return Follower.onRecReqVoteRPC(self, message)
+    
     def onRecAppendEntriesRPC(self,message):
         if(message.term>=self.term):
             self.setState('follower')

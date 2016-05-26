@@ -14,15 +14,20 @@ class Follower(ServerState):
             if(self.votedFor==None or self.votedFor==message.candidateId):
                 if(self.isComplete(message)):
                     voteGranted=True
+                    self.votedFor=message.candidateId
+                    self.setTimer()
                 else:
                     voteGranted=False
             elif(self.votedFor!=message.candidateId):
                 voteGranted=False
         else:
+            self.currentTerm=message.term
             if(self.isComplete(message)):
                 voteGranted=True
-                self.currentTerm=message.term
+                self.votedFor=message.candidateId
+                self.setTimer()
             else:
+                self.votedFor=None
                 voteGranted=False
         
         return RequestVoteRPCReply(self.currentTerm,voteGranted)
@@ -36,8 +41,6 @@ class Follower(ServerState):
             (self.lastLogIndex>message.lastLogIndex))):
             return False
         else:
-            self.votedFor=message.candidateId
-            self.setTimer()
             return True
     
     def onRecAppendEntriesRPC(self,message):
