@@ -14,13 +14,13 @@ import threading
 
 class Datacenter(threading.Thread,StateController):
     
-    def __init__(self,dc_ID,numOfDc,timeUnit):
+    def __init__(self,dc_ID):
         
         super(Datacenter, self).__init__()
-        list=[('0.0.0.0',12346)]
-#         list=[('0.0.0.0',12346),('0.0.0.0',12347),('0.0.0.0',12348),\
-#               ('0.0.0.0',12349),('0.0.0.0',12350)]
-        State.init(dc_ID,numOfDc,timeUnit,list)
+#        list=[('0.0.0.0',12346)]
+        list=[("0.0.0.0",10000),("0.0.0.0",10001),("0.0.0.0",10002),\
+               ("0.0.0.0",10003),("0.0.0.0",10004)]
+        State.init(dc_ID,len(list),0.1,list)
     
     def run(self):
         
@@ -79,13 +79,11 @@ class Datacenter(threading.Thread,StateController):
 def main():
         
     ID = input ("$ datacenter ID:")
-    numOfDc = input ("$ datacenter number:")
-    timeUnit = input ("$ timeUnit:")
     
-    dc = Datacenter(ID,numOfDc,timeUnit)
-    dc.start()
+    dc = Datacenter(ID)
     dc.listen()
-        
+    dc.start()       
+
 if __name__ == "__main__":
     main()
     
