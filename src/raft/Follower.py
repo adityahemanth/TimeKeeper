@@ -1,89 +1,98 @@
-from StateController import StateController
 from RequestVoteRPCReply import RequestVoteRPCReply 
 from RequestVoteRPC import RequestVoteRPC 
 from AppendEntriesRPCReply import AppendEntriesRPCReply
 from AppendEntriesRPC import AppendEntriesRPC
 import random
-from Candidate import Candidate
+from State import State
+from Log import Log
 
-class Follower(StateController,Candidate):
+class Follower(State):
     
-    def reset(self,term):
-        self.setTimer()
-        self.currentTerm=term
-        self.resetVotedFor()
+    @staticmethod
+    def reset(term):
         
-    def resetVotedFor(self):
-        self.votedFor=None
+        Follower.setCurrentTerm(term)
+        Follower.resetVotedFor()
     
-    def onRecReqVoteRPC(self,message):
-        if (message.term<self.currentTerm):
+    @staticmethod
+    def resetVotedFor():
+        State.votedFor=None
+    
+    @staticmethod
+    def onRecReqVoteRPC(message):
+        
+        if (message.term<State.currentTerm):
             voteGranted=False
-        elif(message.term==self.currentTerm):
-            if(self.votedFor==None or self.votedFor==message.candidateId):
-                if(self.isComplete(message)):
+        elif(message.term==State.currentTerm):
+            if(State.votedFor==None or State.votedFor==message.candidateId):
+                if(Follower.isComplete(message)):
                     voteGranted=True
-                    self.votedFor=message.candidateId
-                    self.setTimer()
+                    State.votedFor=message.candidateId
+                    Follower.setTimer()
                 else:
                     voteGranted=False
-            elif(self.votedFor!=message.candidateId):
+            elif(State.votedFor!=message.candidateId):
                 voteGranted=False
         else:
-            self.currentTerm=message.term
-            if(self.isComplete(message)):
+            State.currentTerm=message.term
+            if(Follower.isComplete(message)):
                 voteGranted=True
-                self.votedFor=message.candidateId
-                self.setTimer()
+                State.votedFor=message.candidateId
+                Follower.setTimer()
             else:
-                self.votedFor=None
+                State.votedFor=None
                 voteGranted=False
         
-        return RequestVoteRPCReply(self.currentTerm,voteGranted,self.dc_ID)
+        return RequestVoteRPCReply(State.currentTerm,voteGranted,State.dc_ID)
     
-    def isComplete(self,message):
-        self.lastLogIndex=self.log.getLastIndex()
-        self.lastLogTerm=self.log.getLastTerm()
+    @staticmethod
+    def isComplete(message):
         
-        if(self.lastLogTerm>message.lastLogTerm or \
-           ((self.lastLogTerm==message.lastLogTerm) and \
-            (self.lastLogIndex>message.lastLogIndex))):
+        lastLogIndex=State.log.getLastIndex()
+        lastLogTerm=State.log.getLastTerm()
+        
+        if(lastLogTerm>message.lastLogTerm or \
+           ((lastLogTerm==message.lastLogTerm) and \
+            (lastLogIndex>message.lastLogIndex))):
             return False
         else:
             return True
     
-    def onRecAppendEntriesRPC(self,message):
-        if(message.term<self.currentTerm):
+    @staticmethod
+    def onRecAppendEntriesRPC(message):
+        
+        if(message.term<State.currentTerm):
             success=False
             matchIndex=0
         else:
-            self.currentTerm=message.term
-            self.setTimer()
-            if(self.isMatched(message)):
-                self.log.append(message.entry)
-                matchIndex=self.log.getLastIndex()
+            State.currentTerm=message.term
+            Follower.setTimer()
+            if(Follower.isMatched(message)):
+                State.log.append(message.entry)
+                matchIndex=State.log.getLastIndex()
                 success=True
             else:
-                times=self.log.getLastIndex()-message.prevLogIndex+1
+                times=State.log.getLastIndex()-message.prevLogIndex+1
                 if(times>0):
                     for i in range(times):
-                        self.log.deleteLogItem()
+                        State.log.deleteLogItem()
                 
                 matchIndex=0
                 success=False 
                 
-        return AppendEntriesRPCReply(self.currentTerm,success,matchIndex,self.dc_ID)
-            
-    def isMatched(self,message):
-        if(message.prevLogIndex>self.log.getLastIndex()):
+        return AppendEntriesRPCReply(State.currentTerm,success,matchIndex,State.dc_ID)
+    
+    @staticmethod
+    def isMatched(message):
+        if(message.prevLogIndex>State.log.getLastIndex()):
             return False
-        elif(not self.eql(self.log.getTerm(message.prevLogIndex),message.prevLogTerm)):
+        elif(not Follower.eql(State.log.getTerm(message.prevLogIndex),message.prevLogTerm)):
             return False
         else:
             return True        
-        
-    def onTimeout(self):
-        self.setState('candidate')
-        StateController.reset()
+    
+    @staticmethod
+    def onTimeout():
+        Follower.setState('candidate')
     
     

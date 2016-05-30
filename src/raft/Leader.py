@@ -1,89 +1,94 @@
-from StateController import StateController
+from State import State
 from RequestVoteRPCReply import RequestVoteRPCReply 
 from RequestVoteRPC import RequestVoteRPC 
 from AppendEntriesRPCReply import AppendEntriesRPCReply
 from AppendEntriesRPC import AppendEntriesRPC
 from Sender import Sender
 from Receiver import Receiver
-class Leader(StateController,Receiver):
-    def reset(self):
-        self.onPeriodEnd()
-        self.setTimer()
-        self.resetNextIndex()
+
+class Leader(State):
+    
+    @staticmethod
+    def reset():
+        Leader.resetNextIndex()
+    
+    @staticmethod    
+    def resetNextIndex():
+        for dcNum in range(State.numOfDc):
+            State.nextIndex[dcNum]=State.log.getLastIndex()+1
+            State.matchIndex[dcNum]=0
+    
+    @staticmethod
+    def decrementNextIndex(dcNum):
+        State.nextIndex[dcNum]=State.nextIndex[dcNum]-1
+    
+    @staticmethod
+    def incrementNextIndex(dcNum):
+        State.nextIndex[dcNum]=State.nextIndex[dcNum]+1
+    
+    @staticmethod
+    def setMatchIndex(dcNum,matchIndex):
+        State.matchIndex[dcNum]=matchIndex
+    
+    @staticmethod
+    def heartbeat(dcNum):
         
-    def resetNextIndex(self):
-        for dcNum in range(self.numOfDC):
-            self.nextIndex[dcNum]=self.log.getLastIndex()+1
-            self.matchIndex[dcNum]=0
+        return AppendEntriesRPC(State.currentTerm,\
+                                State.dc_ID,State.nextIndex[dcNum]-1,\
+                                State.log.getTerm(State.nextIndex[dcNum]-1),\
+                                None,State.commitIndex)
     
-    def decrementNextIndex(self,dcNum):
-        self.nextIndex[dcNum]=self.nextIndex[dcNum]-1
-    
-    def incrementNextIndex(self,dcNum):
-        self.nextIndex[dcNum]=self.nextIndex[dcNum]+1
-    
-    def setMatchIndex(self,dcNum,matchIndex):
-        self.matchIndex[dcNum]=matchIndex
-    
-    def heartbeat(self,dcNum):
+    @staticmethod
+    def entry(dcNum):
         
-        return AppendEntriesRPC(self.currentTerm,\
-                                self.dc_ID,self.nextIndex[dcNum]-1,\
-                                self.log.getTerm(self.nextIndex[dcNum]-1),\
-                                None,self.commitIndex)
+        return AppendEntriesRPC(State.currentTerm,\
+                                State.dc_ID,State.nextIndex[dcNum]-1,\
+                                State.log.getTerm(State.nextIndex[dcNum]-1),\
+                                State.log.getLogItem(State.nextIndex[dcNum]),\
+                                State.commitIndex)
     
-    def entry(self,dcNum):
+    @staticmethod
+    def sendAppendEntriesRPC():
         
-        return AppendEntriesRPC(self.currentTerm,\
-                                self.dc_ID,self.nextIndex[dcNum]-1,\
-                                self.log.getTerm(self.nextIndex[dcNum]-1),\
-                                self.log.getLogItem(self.nextIndex[dcNum]),\
-                                self.commitIndex)
-    
-    def sendAppendEntriesRPC(self):
-        
-        for dcNum in range(self.numOfDC):
-            if(self.isSelf(dcNum)):
+        for dcNum in range(State.numOfDc):
+            if(Leader.isSelf(dcNum)):
                 continue
-            if(self.matchIndex[dcNum]!=0):
-                sender=Sender('AppendEntriesRPC',self.entry(dcNum))
-                sender.send(self.dc_list[dcNum])
+            if(State.matchIndex[dcNum]!=0):
+                sender=Sender('AppendEntriesRPC',Leader.entry(dcNum))
+                sender.send(State.dc_list[dcNum])
             else:
-                sender=Sender('AppendEntriesRPC',self.heartbeat(dcNum))
-                sender.send(self.dc_list[dcNum])            
-            
-    def isSelf(self,dcNum):
-        return (self.dc_ID==dcNum)
+                sender=Sender('AppendEntriesRPC',Leader.heartbeat(dcNum))
+                sender.send(State.dc_list[dcNum])            
     
-    def onRecAppendEntriesRPCReply(self,message):
+    @staticmethod        
+    def isSelf(dcNum):
+        return (State.dc_ID==dcNum)
+    
+    @staticmethod
+    def onRecAppendEntriesRPCReply(message):
         
         if(not message.success):
-            self.decrementNextIndex(message.followerId)
-            print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Retry AppendEntriesRPC to datacenter '+\
+            Leader.decrementNextIndex(message.followerId)
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Retry AppendEntriesRPC to datacenter '+\
                   str(message.followerId))
-            sender=Sender('AppendEntriesRPC',self.heartbeat(message.followerId))
-            sender.send(self.dc_list[message.followerId])            
-            self.setPeriod()
+            sender=Sender('AppendEntriesRPC',Leader.heartbeat(message.followerId))
+            sender.send(State.dc_list[message.followerId])            
+            Leader.setPeriod()
         else:
-            self.setMatchIndex(message.followerId, message.matchIndex)
-            self.incrementNextIndex(message.followerId)
-            if(message.matchIndex>self.commitIndex):
-                self.checkCommit(message.matchIndex)
+            Leader.setMatchIndex(message.followerId, message.matchIndex)
+            Leader.incrementNextIndex(message.followerId)
+            if(message.matchIndex>State.commitIndex):
+                Leader.checkCommit(message.matchIndex)
     
-    def checkCommit(self,N):
+    @staticmethod
+    def checkCommit(N):
         count=0
-        for dcNum in range(self.numOfDC):
-            if(self.matchIndex[dcNum]>=N or self.isSelf(dcNum)): 
+        for dcNum in range(State.numOfDc):
+            if(State.matchIndex[dcNum]>=N or Leader.isSelf(dcNum)): 
                 count=count+1
         
-        if(count>=self.majorityNum and self.log[N]==self.currentTerm):
-            self.commitIndex=N
-    
-    def onRecAppendEntriesRPC(self, message):
-        Receiver.onRecAppendEntriesRPC(message)
-    
-    def onRecReqVoteRPC(self, message):
-        Receiver.onRecReqVoteRPC(message)
+        if(count>=State.majorityNum and State.log[N]==State.currentTerm):
+            State.commitIndex=N
     
         
     

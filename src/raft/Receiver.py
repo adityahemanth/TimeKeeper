@@ -14,5 +14,5 @@ class Receiver(object):
     
     def onRecAppendEntriesRPC(self,message):
         success=False
-        return AppendEntriesRPCReply(self.currentTerm,success,self.dc_ID,-1)
+        return AppendEntriesRPCReply(self.currentTerm,success,self.dc_ID,0)
     

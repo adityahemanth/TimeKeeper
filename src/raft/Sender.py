@@ -1,7 +1,7 @@
 import socket
 import pickle
-import Message
-class Sender:
+from Message import Message
+class Sender(object):
     
     def __init__(self,type,obj):
         self.type=type

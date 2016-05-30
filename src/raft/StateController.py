@@ -2,122 +2,133 @@ import random
 from Follower import Follower
 from Candidate import Candidate
 from Leader import Leader
-from Receiver import Receiver
-from Datacenter import Datacenter
-from Sender import Sender
 from time import time
 from RequestVoteRPCReply import RequestVoteRPCReply 
 from RequestVoteRPC import RequestVoteRPC 
 from AppendEntriesRPCReply import AppendEntriesRPCReply
 from AppendEntriesRPC import AppendEntriesRPC
+from math import ceil
+from Log import Log
+from State import State
+from Receiver import Receiver
+from Sender import Sender
 
-class StateController(Datacenter,Follower,Candidate,Leader,Receiver):
+
+
+class StateController(State):
     
-    def setState(self,state):
-        self.state=state
-    
-    def setPeriod(self):
-        self.periodTime=0.5*self.timeUnit
-        self.periodStart=time.time()
+
     def periodEnd(self,currentTime):
-        if(self.eql(self.state,'follower')):
+        if(StateController.eql(State.state,'follower')):
             return False
-        elapse=currentTime-self.periodStart
-        return (elapse>=self.periodTime)
+        elapse=currentTime-State.periodStart
+        return (elapse>=State.periodTime)
     def onPeriodEnd(self):
-        if(self.eql(self.state,'leader')):
+        if(StateController.eql(State.state,'leader')):
             self.sendAppendEntriesRPC()
-        elif(self.eql(self.state,'candidate')):
+        elif(StateController.eql(State.state,'candidate')):
             self.sendReqVoteRPC()
-        self.setPeriod()
+        StateController.setPeriod()
             
-            
-    def setTimer(self):
-        self.waitTime=self.timeUnit*random.random()+self.timeUnit
-        self.start=time.time()
     def isTimeout(self,currentTime):
-        if(self.eql(self.state,'leader')):
+        if(StateController.eql(State.state,'leader')):
             return False
-        elapse=self.currentTime-self.start
-        return (elapse>=self.waitTime)
+        elapse=currentTime-State.timerStart
+        return (elapse>=State.timerTime)
     def onTimeout(self):
-        print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Time out!')
-        if(self.eql(self.state,'follower')):
-            Follower.onTimeout(self)
-            print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): State Switch to Candidate')
-        elif(self.eql(self.state,'candidate')):
-            Candidate.onTimeout(self)
-            print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Increment Term')
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Time out!')
+        if(StateController.eql(State.state,'follower')):
+            Follower.onTimeout()
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): State Switch to Candidate')
+            self.reset()
+        elif(StateController.eql(State.state,'candidate')):
+            Candidate.onTimeout()
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Increment Term')
+            self.reset()
         else:
             pass
     
-    
     def stepDown(self,message):
-        if(message.term>self.currentTerm and (not self.eql(self.State,'follower'))):
-            self.setState('follower')
+        if(message.term>State.currentTerm and (not StateController.eql(State.state,'follower'))):
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Step down...State Switch to Follower')
+            StateController.setState('follower')
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Follower')
             Follower.reset(message.term)
-            print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Step down...State Switch to Follower')
+            StateController.setTimer()
             return True
         else:
             return False
     
     def reset(self):
-        if(self.eql(self.state,'follower')):
+        if(StateController.eql(State.state,'follower')):
             pass
-        elif(self.eql(self.state,'candidate')):
-            Candidate.reset(self)
-        elif(self.eql(self.state,'leader')):
-            print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): State Switch to Leader')
-            Leader.reset(self)
+        elif(StateController.eql(State.state,'candidate')):
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Candidate')
+            Candidate.reset()
+            self.onPeriodEnd()
+            StateController.setTimer()
+            
+        elif(StateController.eql(State.state,'leader')):
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Leader')
+            Leader.reset()
+            self.onPeriodEnd()
+            StateController.setTimer()
+            
         else:
             print('Wrong Resetting!!!')    
-    
+
     def onRecAppendEntriesRPC(self,message):
-        print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Receive AppendEntriesRPC from datacenter '+\
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive AppendEntriesRPC from datacenter '+\
               str(message.leaderId))
         
-        if(self.eql(self.state,'follower')):
-            reply=Follower.onRecAppendEntriesRPC(self, message)
+        if(StateController.eql(State.state,'follower')):
+            reply=Follower.onRecAppendEntriesRPC(message)
         else:
-            reply=Receiver.onRecAppendEntriesRPC(self, message)
+            reply=Receiver.onRecAppendEntriesRPC(message)
         
         sender=Sender('AppendEntriesRPCReply',reply)
         sender.send(self.dc_list[message.leaderId])  
     
     def onRecReqVoteRPC(self,message):
-        print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Receive ReqVoteRPC from datacenter '+\
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive ReqVoteRPC from datacenter '+\
               str(message.candidateId))
         
-        if(self.eql(self.state,'follower')):
-            reply=Follower.onRecReqVoteRPC(self, message)
+        if(StateController.eql(State.state,'follower')):
+            reply=Follower.onRecReqVoteRPC(message)
         else:
-            reply=Receiver.onRecReqVoteRPC(self, message)
+            reply=Receiver.onRecReqVoteRPC(message)
         
         sender=Sender('RequestVoteRPCReply',reply)
         sender.send(self.dc_list[message.candidateId])
     
     def onRecAppendEntriesRPCReply(self,message):
-        print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Receive AppendEntriesRPCReply from datacenter '+\
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive AppendEntriesRPCReply from datacenter '+\
               str(message.followerId))
         
-        Leader.onRecAppendEntriesRPCReply(self,message)  
+        Leader.onRecAppendEntriesRPCReply(message)  
     
     def onRecReqVoteRPCReply(self,message):
-        print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Receive ReqVoteRPCReply from datacenter '+\
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive ReqVoteRPCReply from datacenter '+\
               str(message.voterId))
         
-        Candidate.onRecReqVoteRPCReply(self,message)    
+        Candidate.onRecReqVoteRPCReply(message)
+        if(self.isMajorityGranted()):
+            self.onMajorityGranted()    
+    
+    def onMajorityGranted(self):
+        Candidate.onMajorityGranted()
+        self.reset()
+    
+    def isMajorityGranted(self):
+        return Candidate.isMajorityGranted()
     
     def sendAppendEntriesRPC(self):
-        print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Send AppendEntriesRPC')
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Send AppendEntriesRPC')
         
-        Leader.sendAppendEntriesRPC(self)
+        Leader.sendAppendEntriesRPC()
     
     def sendReqVoteRPC(self):
-        print("("+str(self.dc_ID)+","+self.state+","+str(self.currentTerm)+'): Send ReqVoteRPC')
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Send ReqVoteRPC')
         
-        Candidate.sendReqVoteRPC(self)
-    
-    def eql(self,a,b):
-        return (a==b)
+        Candidate.sendReqVoteRPC()
     

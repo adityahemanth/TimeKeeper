@@ -5,34 +5,39 @@ Created on 25 May 2016
 '''
 from StateController import StateController
 import socket,pickle
-from Follower import Follower
-from time import time
+import time
 from math import ceil
 from Log import Log
-import LogItem
+from LogItem import LogItem
+from State import State
+import threading
 
-class Datacenter(StateController):
+class Datacenter(threading.Thread,StateController):
     
-    def __init__(self,dc_ID,numOfDC,timeUnit):
+    def __init__(self,dc_ID,numOfDc,timeUnit):
         
-        self.commitIndex=-1
-        self.lastApplied=-1
+        super(Datacenter, self).__init__()
+        list=[('0.0.0.0',12346)]
+#         list=[('0.0.0.0',12346),('0.0.0.0',12347),('0.0.0.0',12348),\
+#               ('0.0.0.0',12349),('0.0.0.0',12350)]
+        State.init(dc_ID,numOfDc,timeUnit,list)
+    
+    def run(self):
         
-        self.dc_ID=dc_ID
-        self.numOfDC=numOfDC
-        self.majorityNum=ceil(1.0*self.numOfDC/2.0)
-        self.timeUnit=timeUnit
-        
-        self.state='follower'
-        self.log=Log()
-        Follower.reset(1)
-        
+        while True:
+            
+            if(self.isTimeout(time.time())):
+                print("Time out!")
+                self.onTimeout()
+            if(self.periodEnd(time.time())):
+                print("Period end!")
+                self.onPeriodEnd()
+            
     def listen(self):
         
         tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        tcpsock.bind((self.host,self.port))
+        tcpsock.bind((State.host,State.port))
         tcpsock.listen(5)
         print("listening ...")
         
@@ -43,10 +48,6 @@ class Datacenter(StateController):
             mtype = message.getType() 
             
             self.stepDown(message)
-            if(self.isTimeout(time.time())):
-                self.onTimeout()
-            if(self.periodEnd(time.time())):
-                self.onPeriodEnd()
             
             if(self.eql(mtype,'AppendEntriesRPC')):
                 self.onRecAppendEntriesRPC(message)
@@ -66,10 +67,7 @@ class Datacenter(StateController):
         print(self.dc_list)
         print(self.dc_ID)
         (self.host,self.port) = self.dc_list[self.dc_ID]      
-    def setDcList(self,dc_list):
-        self.dc_list = dc_list
-        (self.host,self.port) = self.dc_list[self.dc_ID]
-    def inputList(yourComment):
+    def inputList(self,yourComment):
         listSTR=input(yourComment)     
         listSTR =listSTR[1:len(listSTR)-1]
         listT = listSTR.split(",")
@@ -78,23 +76,18 @@ class Datacenter(StateController):
             listEnd.append(int(caseListT))
         return listEnd
         
-    def setHost(self,host):
-        self.host=host
-    def setPort(self,port):
-        self.port=port
-    
 def main():
         
     ID = input ("$ datacenter ID:")
-    numOfDC = input ("$ datacenter number:")
+    numOfDc = input ("$ datacenter number:")
     timeUnit = input ("$ timeUnit:")
     
-    dc = Datacenter(ID,numOfDC,timeUnit)
-    dc.config()
+    dc = Datacenter(ID,numOfDc,timeUnit)
+    dc.start()
     dc.listen()
         
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()
     
         
 

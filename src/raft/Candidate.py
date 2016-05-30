@@ -1,72 +1,80 @@
-from StateController import StateController
 from Sender import Sender
 from AppendEntriesRPC import AppendEntriesRPC
 from RequestVoteRPC import RequestVoteRPC
-from Follower import Follower
 from AppendEntriesRPCReply import AppendEntriesRPCReply
 from Leader import Leader
 from RequestVoteRPCReply import RequestVoteRPCReply
 from Receiver import Receiver
+from State import State
 
-class Candidate(StateController,Receiver):
-    def reset(self):
-        self.onPeriodEnd()
-        self.setTimer()
-        self.resetvoteCount()
-        self.resetReceiverList()
-        self.voteForSelf()
-        self.incrementTerm()
+class Candidate(State):
     
-    def resetvoteCount(self):
-        self.voteCount=0
-    def resetReceiverList(self):
-        for dcNum in range(self.numOfDC):
-            self.receiverList.append(True)
+    @staticmethod
+    def reset():
+        
+        Candidate.resetVoteCount()
+        Candidate.resetReceiverList()
+        Candidate.voteForSelf()
+        Candidate.incrementTerm()
+    @staticmethod
+    def resetVoteCount():
+        State.voteCount=0
     
-    def incrementVoteCount(self):
-        self.voteCount=self.voteCount+1
-    def incrementTerm(self):
-        self.currentTerm=self.currentTerm+1
-    def voteForSelf(self):
-        self.votedFor=self.dc_ID
-        self.receiverList[self.dc_ID]=False
-        self.incrementVoteCount()
+    @staticmethod
+    def resetReceiverList():
+        State.receiverList=[]
+        for dcNum in range(State.numOfDc):
+            State.receiverList.append(True)
+    
+    @staticmethod
+    def incrementVoteCount():
+        State.voteCount=State.voteCount+1
+    
+    @staticmethod
+    def incrementTerm():
+        State.currentTerm=State.currentTerm+1
+    
+    @staticmethod
+    def voteForSelf():
+        State.votedFor=State.dc_ID
+        State.receiverList[State.dc_ID]=False
+        Candidate.incrementVoteCount()
+    
+    @staticmethod    
+    def sendReqVoteRPC():
+        lastLogIndex=State.log.getLastIndex()
+        lastLogTerm=State.log.getLastTerm()
         
-    def sendReqVoteRPC(self):
-        lastLogIndex=self.log.getLastIndex()
-        lastLogTerm=self.log.getLastTerm()
+        reqRPC=RequestVoteRPC(State.currentTerm,State.dc_ID,lastLogIndex,lastLogTerm)
         
-        reqRPC=RequestVoteRPC(self.term,self.dc_ID,lastLogIndex,lastLogTerm)
-        
-        for dcNum in range(self.numOfDC):
-            if(self.receiverList[dcNum]):
+        for dcNum in range(State.numOfDc):
+            if(State.receiverList[dcNum]):
                 sender=Sender('RequestVoteRPC',reqRPC)
-                sender.send(self.dc_list[dcNum])
+                sender.send(State.dc_list[dcNum])
     
-    def onRecReqVoteRPCReply(self,message):
+    @staticmethod
+    def onRecReqVoteRPCReply(message):
     
-        if(message.term==self.term):
+        if(message.term==State.currentTerm):
             if(message.voteGranted):
-                self.receiverList[message.voterId]=False
-                self.incrementVoteCount()
+                State.receiverList[message.voterId]=False
+                Candidate.incrementVoteCount()
             else:
                 pass
-        elif(message.term<self.term):
+        elif(message.term<State.currentTerm):
             pass
-        
-        if(self.isMajorityGranted()):
-            self.onMajorityGranted()
-            
-    def isMajorityGranted(self):
-        if(self.voteCount>=self.majorityNum):
+    
+    @staticmethod        
+    def isMajorityGranted():
+        if(State.voteCount>=State.majorityNum):
             return True
         else:
             return False
     
-    def onMajorityGranted(self):
-        self.setState('leader')
-        StateController.reset()
+    @staticmethod
+    def onMajorityGranted():
+        Candidate.setState('leader')
     
-    def onTimeout(self):
-        StateController.reset()
-    
+    @staticmethod
+    def onTimeout():
+        pass    
