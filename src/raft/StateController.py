@@ -36,7 +36,7 @@ class StateController(State):
         elapse=currentTime-State.timerStart
         return (elapse>=State.timerTime)
     def onTimeout(self):
-        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Time out!')
+        #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Time out!')
         if(StateController.eql(State.state,'follower')):
             Follower.onTimeout()
             print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): State Switch to Candidate')
@@ -50,11 +50,11 @@ class StateController(State):
     
     def stepDown(self,message):
         if(message.term>State.currentTerm and (not StateController.eql(State.state,'follower'))):
-            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Step down...State Switch to Follower')
             StateController.setState('follower')
-            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Follower')
+            #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Follower')
             Follower.reset(message.term)
             StateController.setTimer()
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Step down...State Switch to Follower')
             return True
         else:
             return False
@@ -63,23 +63,23 @@ class StateController(State):
         if(StateController.eql(State.state,'follower')):
             pass
         elif(StateController.eql(State.state,'candidate')):
-            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Candidate')
+            #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Candidate')
             Candidate.reset()
             self.onPeriodEnd()
             StateController.setTimer()
             
         elif(StateController.eql(State.state,'leader')):
-            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Leader')
+            #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Leader')
             Leader.reset()
             self.onPeriodEnd()
             StateController.setTimer()
             
-        else:
+        else: 
             print('Wrong Resetting!!!')    
 
     def onRecAppendEntriesRPC(self,message):
         print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive AppendEntriesRPC from datacenter '+\
-              str(message.leaderId))
+              str(message.leaderId)+" term"+str(message.term))
         
         if(StateController.eql(State.state,'follower')):
             reply=Follower.onRecAppendEntriesRPC(message)
@@ -91,30 +91,36 @@ class StateController(State):
     
     def onRecReqVoteRPC(self,message):
         print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive ReqVoteRPC from datacenter '+\
-              str(message.candidateId))
+              str(message.candidateId)+" term"+str(message.term))
         
         if(StateController.eql(State.state,'follower')):
             reply=Follower.onRecReqVoteRPC(message)
         else:
             reply=Receiver.onRecReqVoteRPC(message)
         
+        print(reply.voteGranted)
         sender=Sender('RequestVoteRPCReply',reply)
         sender.send(self.dc_list[message.candidateId])
     
     def onRecAppendEntriesRPCReply(self,message):
         print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive AppendEntriesRPCReply from datacenter '+\
-              str(message.followerId))
-        
-        Leader.onRecAppendEntriesRPCReply(message)  
+              str(message.followerId)+" "+str(message.success)+" "+str(message.matchIndex)+" term"+str(message.term))
+        if(StateController.eql(State.state,'Leader')):
+            Leader.onRecAppendEntriesRPCReply(message)
+        else:
+            pass  
     
     def onRecReqVoteRPCReply(self,message):
         print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive ReqVoteRPCReply from datacenter '+\
-              str(message.voterId))
+              str(message.voterId)+" "+str(message.voteGranted)+" term"+str(message.term))
         
-        Candidate.onRecReqVoteRPCReply(message)
-        if(self.isMajorityGranted()):
-            self.onMajorityGranted()    
-    
+        if(StateController.eql(State.state,'candidate')):
+            Candidate.onRecReqVoteRPCReply(message)
+            if(self.isMajorityGranted()):
+                self.onMajorityGranted()    
+        else:
+            pass
+        
     def onMajorityGranted(self):
         Candidate.onMajorityGranted()
         self.reset()

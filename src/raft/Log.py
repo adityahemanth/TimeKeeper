@@ -42,6 +42,9 @@ class Log(object):
             return self.log[index].index
     
     def getTerm(self,index):
+        
+        print(index)
+        
         if(index>self.getLastIndex()):
             return None
         else:

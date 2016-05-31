@@ -12,7 +12,7 @@ class Sender(object):
         m = Message(self.type, self.obj)
         try:
             s.connect(conn) 
-            s.send(m)
+            s.send(pickle.dumps(m,0))
             # originally, it was 
             # except Exception, e: 
             # but this syntax is not supported anymore. 

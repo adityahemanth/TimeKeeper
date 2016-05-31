@@ -6,6 +6,7 @@ from Leader import Leader
 from RequestVoteRPCReply import RequestVoteRPCReply
 from Receiver import Receiver
 from State import State
+from Log import Log
 
 class Candidate(State):
     
@@ -49,6 +50,7 @@ class Candidate(State):
         
         for dcNum in range(State.numOfDc):
             if(State.receiverList[dcNum]):
+                print(dcNum)
                 sender=Sender('RequestVoteRPC',reqRPC)
                 sender.send(State.dc_list[dcNum])
     
@@ -56,11 +58,10 @@ class Candidate(State):
     def onRecReqVoteRPCReply(message):
     
         if(message.term==State.currentTerm):
-            if(message.voteGranted):
-                State.receiverList[message.voterId]=False
+            if(message.voteGranted and State.receiverList[message.voterId]):
                 Candidate.incrementVoteCount()
-            else:
-                pass
+            State.receiverList[message.voterId]=False
+            print(message.voterId)
         elif(message.term<State.currentTerm):
             pass
     

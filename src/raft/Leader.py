@@ -5,6 +5,7 @@ from AppendEntriesRPCReply import AppendEntriesRPCReply
 from AppendEntriesRPC import AppendEntriesRPC
 from Sender import Sender
 from Receiver import Receiver
+from Log import Log
 
 class Leader(State):
     
@@ -15,8 +16,8 @@ class Leader(State):
     @staticmethod    
     def resetNextIndex():
         for dcNum in range(State.numOfDc):
-            State.nextIndex[dcNum]=State.log.getLastIndex()+1
-            State.matchIndex[dcNum]=0
+            State.nextIndex.append(State.log.getLastIndex()+1)
+            State.matchIndex.append(0)
     
     @staticmethod
     def decrementNextIndex(dcNum):

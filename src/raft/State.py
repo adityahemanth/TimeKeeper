@@ -14,7 +14,7 @@ class State(object):
     '''
     
     @staticmethod
-    def init(dc_ID,numOfDc,timeUnit,dc_list):
+    def init(dc_ID,numOfDc,timeUnit,dc_list,host,port):
         
         #Datacenter Info and Config
         State.setDcId(int(dc_ID))
@@ -22,10 +22,12 @@ class State(object):
         State.setMajorityNum()
         State.setTimeUnit(float(timeUnit))
         State.setDcList(dc_list)
+        State.setHost(host)
+        State.setPort(port)
         
         #initialize State as 'follower'
         State.setState('follower')
-        State.setCurrentTerm(1)
+        State.setCurrentTerm(int(1))
         State.setPeriod()
         State.setTimer()
         
@@ -54,8 +56,14 @@ class State(object):
     @staticmethod
     def setDcList(dc_list):
         State.dc_list = dc_list
-        (State.host,State.port) = dc_list[State.dc_ID]
-        State.port=int(State.port)
+    
+    @staticmethod
+    def setHost(host):
+        State.host=host
+        
+    @staticmethod
+    def setPort(port):
+        State.port=port
     
     @staticmethod
     def setMajorityNum():
@@ -111,7 +119,7 @@ class State(object):
     
     @staticmethod
     def setPeriod():
-        State.periodTime=0.5*State.timeUnit
+        State.periodTime=0.95*State.timeUnit
         State.periodStart=time.time()
     
     @staticmethod

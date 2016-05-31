@@ -18,19 +18,20 @@ class Datacenter(threading.Thread,StateController):
         
         super(Datacenter, self).__init__()
 #        list=[('0.0.0.0',12346)]
-        list=[("0.0.0.0",10000),("0.0.0.0",10001),("0.0.0.0",10002),\
-               ("0.0.0.0",10003),("0.0.0.0",10004)]
-        State.init(dc_ID,len(list),0.1,list)
+        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]
+        
+#         list=[("127.0.0.1",10000),("127.0.0.1",10001),("127.0.0.1",10002),\
+#                ("127.0.0.1",10003),("127.0.0.1",10004)]
+#         
+        State.init(int(dc_ID),len(list),0.75,list,"0.0.0.0",list[int(dc_ID)][1])
     
     def run(self):
         
         while True:
             
             if(self.isTimeout(time.time())):
-                print("Time out!")
                 self.onTimeout()
             if(self.periodEnd(time.time())):
-                print("Period end!")
                 self.onPeriodEnd()
             
     def listen(self):
@@ -47,19 +48,25 @@ class Datacenter(threading.Thread,StateController):
             message = pickle.loads(rcv)
             mtype = message.getType() 
             
-            self.stepDown(message)
+            obj=message.getPayload()
+            
+            self.stepDown(obj)
+            
             
             if(self.eql(mtype,'AppendEntriesRPC')):
-                self.onRecAppendEntriesRPC(message)
+                self.onRecAppendEntriesRPC(obj)
             elif(self.eql(mtype,'AppendEntriesRPCReply')):
-                self.onRecAppendEntriesRPCReply(message)
+                self.onRecAppendEntriesRPCReply(obj)
             elif(self.eql(mtype,'RequestVoteRPC')):
-                self.onRecReqVoteRPC(message)
+                self.onRecReqVoteRPC(obj)
             elif(self.eql(mtype,'RequestVoteRPCReply')):
-                self.onRecReqVoteRPCReply(message)
+                self.onRecReqVoteRPCReply(obj)
             else:
                 print('Invalid message type!!!')  
             
+            
+            print(mtype)
+            c.close()
             
     def config(self):
         elements=self.inputList("Input config:")
@@ -81,8 +88,8 @@ def main():
     ID = input ("$ datacenter ID:")
     
     dc = Datacenter(ID)
-    dc.listen()
-    dc.start()       
+    dc.start()
+    dc.listen()       
 
 if __name__ == "__main__":
     main()

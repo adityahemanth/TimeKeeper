@@ -5,14 +5,17 @@ Created on 25 May 2016
 '''
 from RequestVoteRPCReply import RequestVoteRPCReply
 from AppendEntriesRPCReply import AppendEntriesRPCReply
+from State import State
 
 class Receiver(object):
     
-    def onRecReqVoteRPC(self, message):
+    @staticmethod
+    def onRecReqVoteRPC(message):
         votedGranted=False
-        return RequestVoteRPCReply(self.currentTerm,votedGranted,self.dc_ID)
+        return RequestVoteRPCReply(State.currentTerm,votedGranted,State.dc_ID)
     
-    def onRecAppendEntriesRPC(self,message):
+    @staticmethod
+    def onRecAppendEntriesRPC(message):
         success=False
-        return AppendEntriesRPCReply(self.currentTerm,success,self.dc_ID,0)
+        return AppendEntriesRPCReply(State.currentTerm,success,State.dc_ID,0)
     
