@@ -42,17 +42,16 @@ class Candidate(State):
         Candidate.incrementVoteCount()
     
     @staticmethod    
-    def sendReqVoteRPC():
+    def sendReqVoteRPC(dcNum):
         lastLogIndex=State.log.getLastIndex()
         lastLogTerm=State.log.getLastTerm()
         
         reqRPC=RequestVoteRPC(State.currentTerm,State.dc_ID,lastLogIndex,lastLogTerm)
         
-        for dcNum in range(State.numOfDc):
-            if(State.receiverList[dcNum]):
-                print(dcNum)
-                sender=Sender('RequestVoteRPC',reqRPC)
-                sender.send(State.dc_list[dcNum])
+        if(State.receiverList[dcNum]):
+            print("Send ReqVoteRPC to: "+str(dcNum))
+            sender=Sender('RequestVoteRPC',reqRPC)
+            sender.send(State.dc_list[dcNum])
     
     @staticmethod
     def onRecReqVoteRPCReply(message):

@@ -79,7 +79,9 @@ class Follower(State):
                 
                 matchIndex=0
                 success=False 
-                
+        
+        print("Match Index: "+str(matchIndex))
+                     
         return AppendEntriesRPCReply(State.currentTerm,success,matchIndex,State.dc_ID)
     
     @staticmethod

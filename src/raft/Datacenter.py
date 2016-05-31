@@ -21,16 +21,17 @@ class Datacenter(threading.Thread,StateController):
 #        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]
         list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003),\
                ("127.0.0.1",8004),("127.0.0.1",8005)]#         
-        State.init(int(dc_ID),len(list),0.5,list,"0.0.0.0",list[int(dc_ID)][1])
+        State.init(int(dc_ID),len(list),2.0,list,"0.0.0.0",list[int(dc_ID)][1])
     
     def run(self):
         
         while True:
+            for dcNum in range(State.numOfDc):
+                if(self.periodEnd(time.time(),dcNum) and dcNum!=State.dc_ID):
+                    self.onPeriodEnd(dcNum)
             
             if(self.isTimeout(time.time())):
                 self.onTimeout()
-            if(self.periodEnd(time.time())):
-                self.onPeriodEnd()
             
     def listen(self):
         

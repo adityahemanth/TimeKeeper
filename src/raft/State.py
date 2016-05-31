@@ -28,8 +28,13 @@ class State(object):
         #initialize State as 'follower'
         State.setState('follower')
         State.setCurrentTerm(int(1))
-        State.setPeriod()
         State.setTimer()
+        State.periodTime=[]
+        State.periodStart=[]
+        for dcNum in range(State.numOfDc):
+            State.periodTime.append(0.0)
+            State.periodStart.append(0.0)
+            State.setPeriod(dcNum)
         
         #Fields for Candidate and Follower
         State.setVotedFor(dc_ID)
@@ -118,9 +123,9 @@ class State(object):
         State.voteCount=voteCount
     
     @staticmethod
-    def setPeriod():
-        State.periodTime=0.5*State.timeUnit
-        State.periodStart=time.time()
+    def setPeriod(dcNum):
+        State.periodTime[dcNum]=0.2*State.timerTime
+        State.periodStart[dcNum]=time.time()
     
     @staticmethod
     def setTimer():

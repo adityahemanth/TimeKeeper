@@ -12,13 +12,15 @@ class Sender(object):
         m = Message(self.type, self.obj)
         try:
             s.connect(conn) 
-            s.send(pickle.dumps(m,0))
+            success=True
             # originally, it was 
             # except Exception, e: 
             # but this syntax is not supported anymore. 
         except Exception as e: 
-            print("something's wrong with %s:%d. Exception is %s" % (conn[0], conn[1], e))
+            success=False
         finally:
+            if(success):
+                s.send(pickle.dumps(m,0))
             s.close()
     
     

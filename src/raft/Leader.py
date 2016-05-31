@@ -15,6 +15,8 @@ class Leader(State):
     
     @staticmethod    
     def resetNextIndex():
+        State.nextIndex=[]
+        State.matchIndex=[] 
         for dcNum in range(State.numOfDc):
             State.nextIndex.append(State.log.getLastIndex()+1)
             State.matchIndex.append(0)
@@ -49,17 +51,19 @@ class Leader(State):
                                 State.commitIndex)
     
     @staticmethod
-    def sendAppendEntriesRPC():
+    def sendAppendEntriesRPC(dcNum):
         
-        for dcNum in range(State.numOfDc):
-            if(Leader.isSelf(dcNum)):
-                continue
-            if(State.matchIndex[dcNum]!=0):
-                sender=Sender('AppendEntriesRPC',Leader.entry(dcNum))
-                sender.send(State.dc_list[dcNum])
-            else:
-                sender=Sender('AppendEntriesRPC',Leader.heartbeat(dcNum))
-                sender.send(State.dc_list[dcNum])            
+        if(Leader.isSelf(dcNum)):
+            print("is myself! "+str(dcNum))
+            return
+        if(State.matchIndex[dcNum]!=0):
+            print("Send AppendEntriesRPC to: "+str(dcNum))
+            sender=Sender('AppendEntriesRPC',Leader.entry(dcNum))
+            sender.send(State.dc_list[dcNum])
+        else:
+            print("Send AppendEntriesRPC to: "+str(dcNum))
+            sender=Sender('AppendEntriesRPC',Leader.heartbeat(dcNum))
+            sender.send(State.dc_list[dcNum])            
     
     @staticmethod        
     def isSelf(dcNum):
@@ -70,11 +74,10 @@ class Leader(State):
         
         if(not message.success):
             Leader.decrementNextIndex(message.followerId)
-            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Retry AppendEntriesRPC to datacenter '+\
-                  str(message.followerId))
+            print("Retry AppendEntriesRPC to: "+str(message.followerId))
             sender=Sender('AppendEntriesRPC',Leader.heartbeat(message.followerId))
             sender.send(State.dc_list[message.followerId])            
-            Leader.setPeriod()
+            Leader.setPeriod(dcNum)
         else:
             Leader.setMatchIndex(message.followerId, message.matchIndex)
             Leader.incrementNextIndex(message.followerId)
