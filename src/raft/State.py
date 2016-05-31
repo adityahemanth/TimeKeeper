@@ -119,7 +119,7 @@ class State(object):
     
     @staticmethod
     def setPeriod():
-        State.periodTime=0.95*State.timeUnit
+        State.periodTime=0.5*State.timeUnit
         State.periodStart=time.time()
     
     @staticmethod
