@@ -97,7 +97,7 @@ class datacenter:
 			c.close()
 
 	def config(self):
-		self.dc_list = input("Input config: ")
+		self.dc_list = [("0.0.0.0", 10000), ("0.0.0.0", 10001), ("0.0.0.0", 10002) ]
 		(self.host, self.port) = self.dc_list[self.dc_ID]
 
 
