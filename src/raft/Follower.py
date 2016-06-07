@@ -85,7 +85,6 @@ class Follower(State):
                 Follower.checkCommit(message)
             else:
                 times=State.log.getLastIndex()-message.prevLogIndex+1
-                print('Mismatched: '+str(State.log.getLastIndex())+" "+str(message.prevLogIndex))
                 if(times>0):
                     for i in range(times):
                         print('delete!!!')
