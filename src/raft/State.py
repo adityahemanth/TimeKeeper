@@ -43,10 +43,11 @@ class State(object):
         
         #Fields for Leader
         State.nextIndex=[]
+        State.matchSuccess=[]
         State.matchIndex=[]
         
         #Log and commit Info
-        State.log=Log()
+        State.log=Log(State.numOfDc)
         State.setCommitIndex(0)
         State.setLastApplied(0)
 

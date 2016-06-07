@@ -2,13 +2,16 @@
 
 class post:
 
-	def __init__(self, u_id, post):
-		self.u_id = u_id
+	def __init__(self, dc_Id, post,versionNumber):
+		self.dc_Id = dc_Id
+		self.versionNumber=versionNumber
 		self.post = post
-
-
-	def getUID(self):
-		return self.u_id
+		
+	def getVersionNum(self):
+		return self.versionNumber
+	
+	def getDCID(self):
+		return self.dc_Id
 
 	def getPost(self):
 		return self.post

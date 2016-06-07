@@ -16,18 +16,29 @@ class Leader(State):
     @staticmethod    
     def resetNextIndex():
         State.nextIndex=[]
-        State.matchIndex=[] 
+        State.matchSuccess=[] 
         for dcNum in range(State.numOfDc):
             State.nextIndex.append(State.log.getLastIndex()+1)
+            State.matchSuccess.append(False)
             State.matchIndex.append(0)
     
     @staticmethod
     def decrementNextIndex(dcNum):
-        State.nextIndex[dcNum]=State.nextIndex[dcNum]-1
+        if(Leader.eql(1,State.nextIndex[dcNum])):
+            pass
+        else:
+            State.nextIndex[dcNum]=State.nextIndex[dcNum]-1
     
     @staticmethod
     def incrementNextIndex(dcNum):
-        State.nextIndex[dcNum]=State.nextIndex[dcNum]+1
+        if(Leader.eql(State.log.getLastIndex()+1,State.nextIndex[dcNum])):
+            pass
+        else:
+            State.nextIndex[dcNum]=State.nextIndex[dcNum]+1
+    
+    @staticmethod
+    def setMatchSuccess(dcNum,success):
+        State.matchSuccess[dcNum]=success
     
     @staticmethod
     def setMatchIndex(dcNum,matchIndex):
@@ -54,17 +65,20 @@ class Leader(State):
     def sendAppendEntriesRPC(dcNum):
         
         if(Leader.isSelf(dcNum)):
-            print("is myself! "+str(dcNum))
             return
-        if(State.matchIndex[dcNum]!=0):
-            print("Send AppendEntriesRPC to: "+str(dcNum))
+        
+        if(State.matchSuccess[dcNum]):
+            #print("Send AppendEntriesRPC Entry"+str(State.nextIndex[dcNum])+" to: "+str(dcNum))
             sender=Sender('AppendEntriesRPC',Leader.entry(dcNum))
-            sender.send(State.dc_list[dcNum])
+            sender.setConn(State.dc_list[dcNum])
+            sender.start()            
+            
         else:
-            print("Send AppendEntriesRPC to: "+str(dcNum))
+            #print("Send AppendEntriesRPC Heartbeat"+str(State.nextIndex[dcNum])+" to: "+str(dcNum))
             sender=Sender('AppendEntriesRPC',Leader.heartbeat(dcNum))
-            sender.send(State.dc_list[dcNum])            
-    
+            sender.setConn(State.dc_list[dcNum])
+            sender.start()            
+            
     @staticmethod        
     def isSelf(dcNum):
         return (State.dc_ID==dcNum)
@@ -73,14 +87,35 @@ class Leader(State):
     def onRecAppendEntriesRPCReply(message):
         
         if(not message.success):
-            Leader.decrementNextIndex(message.followerId)
-            print("Retry AppendEntriesRPC to: "+str(message.followerId))
-            sender=Sender('AppendEntriesRPC',Leader.heartbeat(message.followerId))
-            sender.send(State.dc_list[message.followerId])            
-            Leader.setPeriod(dcNum)
-        else:
+            
             Leader.setMatchIndex(message.followerId, message.matchIndex)
-            Leader.incrementNextIndex(message.followerId)
+            Leader.setMatchSuccess(message.followerId, False)
+            Leader.decrementNextIndex(message.followerId)
+            
+            #print("Retry AppendEntriesRPC "+str(State.nextIndex[message.followerId])+" to: "+str(message.followerId))
+            
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): '+'Datacenter '+str(message.followerId)+' unmatched! '+'Retry Entry '+str(State.nextIndex[message.followerId])) 
+            
+            sender=Sender('AppendEntriesRPC',Leader.heartbeat(message.followerId))
+            sender.setConn(State.dc_list[message.followerId])
+            sender.start()            
+            Leader.setPeriod(message.followerId)
+        else:
+            if(not State.matchSuccess[message.followerId]):
+                #print('matched the case!!!!')
+                pass      
+            else:
+                Leader.incrementNextIndex(message.followerId)
+   
+            if(message.matchIndex==State.matchIndex[message.followerId]):
+                pass
+            else:
+                print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): '+'Datacenter '+str(message.followerId)+' matched with Entry '+str(message.matchIndex)) 
+            
+            #print('matched')
+            Leader.setMatchIndex(message.followerId,message.matchIndex)
+            Leader.setMatchSuccess(message.followerId, True)
+            
             if(message.matchIndex>State.commitIndex):
                 Leader.checkCommit(message.matchIndex)
     
@@ -91,8 +126,16 @@ class Leader(State):
             if(State.matchIndex[dcNum]>=N or Leader.isSelf(dcNum)): 
                 count=count+1
         
-        if(count>=State.majorityNum and State.log[N]==State.currentTerm):
+        if(count>=State.majorityNum and State.log.getTerm(N)==State.currentTerm):
+            if(State.commitIndex==N):
+                return
             State.commitIndex=N
+            State.log.setCommitIndex(State.commitIndex)
+            
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+')')
+            print(str(State.commitIndex)+" commited: ")
+            #State.log.display()
+
     
         
     

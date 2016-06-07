@@ -11,8 +11,11 @@ from Log import Log
 from LogItem import LogItem
 from State import State
 import threading
+from ctypes.test.test_incomplete import MyTestCase
+from ClientReqHandler import ClientReqHandler
+from Message import Message
 
-class Datacenter(threading.Thread,StateController):
+class Datacenter(threading.Thread,StateController,ClientReqHandler):
     
     def __init__(self,dc_ID):
         
@@ -21,7 +24,7 @@ class Datacenter(threading.Thread,StateController):
 #        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]
         list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003),\
                ("127.0.0.1",8004),("127.0.0.1",8005)]#         
-        State.init(int(dc_ID),len(list),2.0,list,"0.0.0.0",list[int(dc_ID)][1])
+        State.init(int(dc_ID),len(list),3.0,list,"0.0.0.0",list[int(dc_ID)][1])
     
     def run(self):
         
@@ -49,22 +52,34 @@ class Datacenter(threading.Thread,StateController):
             
             obj=message.getPayload()
             
-            self.stepDown(obj)
-            
             
             if(self.eql(mtype,'AppendEntriesRPC')):
+                self.stepDown(obj)
                 self.onRecAppendEntriesRPC(obj)
             elif(self.eql(mtype,'AppendEntriesRPCReply')):
+                self.stepDown(obj)
                 self.onRecAppendEntriesRPCReply(obj)
             elif(self.eql(mtype,'RequestVoteRPC')):
+                self.stepDown(obj)
                 self.onRecReqVoteRPC(obj)
             elif(self.eql(mtype,'RequestVoteRPCReply')):
+                self.stepDown(obj)
                 self.onRecReqVoteRPCReply(obj)
+            elif(self.eql(mtype, 'CreatePost')):
+                self.onRecCreatePostReq(obj,c)
+            elif(self.eql(mtype,'Lookup')):
+                msg=Message('LookupReply',State.log)
+                c.send(pickle.dumps(msg,0))
+            elif(self.eql(mtype,'LookupLog')):
+                msg=Message('LookupReply',State.log)
+                c.send(pickle.dumps(msg,0))
+            elif(self.eql(mtype, 'GetDcId')):
+                c.send(State.dc_Id)
             else:
                 print('Invalid message type!!!')  
             
             
-            print(mtype)
+            #print(mtype)
             c.close()
             
     def config(self):

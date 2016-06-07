@@ -28,6 +28,7 @@ class Follower(State):
                 if(Follower.isComplete(message)):
                     voteGranted=True
                     State.votedFor=message.candidateId
+                    print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Voted for datacenter '+str(message.candidateId))
                     Follower.setTimer()
                 else:
                     voteGranted=False
@@ -37,6 +38,7 @@ class Follower(State):
             State.currentTerm=message.term
             if(Follower.isComplete(message)):
                 voteGranted=True
+                print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Voted for datacenter '+str(message.candidateId))
                 State.votedFor=message.candidateId
                 Follower.setTimer()
             else:
@@ -68,33 +70,54 @@ class Follower(State):
             State.currentTerm=message.term
             Follower.setTimer()
             if(Follower.isMatched(message)):
-                State.log.append(message.entry)
-                matchIndex=State.log.getLastIndex()
+                matchIndex=message.prevLogIndex
+                
+                if(message.entry==None):
+                    pass
+                else:
+                    print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Accepted entry '+str(message.entry.getIndex())+' from datacenter '+str(message.leaderId)) 
+                
+                if(message.prevLogIndex+1>State.log.getLastIndex()):
+                    State.log.append(message.entry)
+                    matchIndex=State.log.getLastIndex()
+                
                 success=True
+                Follower.checkCommit(message)
             else:
                 times=State.log.getLastIndex()-message.prevLogIndex+1
                 if(times>0):
                     for i in range(times):
                         State.log.deleteLogItem()
-                
                 matchIndex=0
                 success=False 
         
-        print("Match Index: "+str(matchIndex))
+        #print("Match Index: "+str(matchIndex))
                      
         return AppendEntriesRPCReply(State.currentTerm,success,matchIndex,State.dc_ID)
     
     @staticmethod
     def isMatched(message):
-        if(message.prevLogIndex>State.log.getLastIndex()):
-            return False
-        elif(not Follower.eql(State.log.getTerm(message.prevLogIndex),message.prevLogTerm)):
+        
+        if(not Follower.eql(State.log.getTerm(message.prevLogIndex),message.prevLogTerm)):
+            #print('MisMatch2: '+str(State.log.getTerm(message.prevLogIndex))+str(message.prevLogTerm))
+            #print('MisMatch2: '+str(message.prevLogIndex)+str(message.prevLogTerm))
             return False
         else:
+            #print('Match2: '+str(State.log.getTerm(message.prevLogIndex))+str(message.prevLogTerm))
+            #print('Match2: '+str(message.prevLogIndex)+str(message.prevLogTerm))
             return True        
     
     @staticmethod
     def onTimeout():
         Follower.setState('candidate')
     
-    
+    @staticmethod
+    def checkCommit(message):
+        if(message.leaderCommit > State.commitIndex):
+            if(State.commitIndex==min(message.leaderCommit, State.log.getLastIndex())):
+                return;
+            State.commitIndex =min(message.leaderCommit, State.log.getLastIndex())
+            State.log.setCommitIndex(State.commitIndex)
+            
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): '+ "Entry "+str(State.commitIndex)+" commited: ")
+            #State.log.display()

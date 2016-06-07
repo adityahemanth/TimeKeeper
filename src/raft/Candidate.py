@@ -49,16 +49,21 @@ class Candidate(State):
         reqRPC=RequestVoteRPC(State.currentTerm,State.dc_ID,lastLogIndex,lastLogTerm)
         
         if(State.receiverList[dcNum]):
-            print("Send ReqVoteRPC to: "+str(dcNum))
+            #print("Send ReqVoteRPC to: "+str(dcNum))
+            print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Send Request to datacenter '+str(dcNum)) 
+            
             sender=Sender('RequestVoteRPC',reqRPC)
-            sender.send(State.dc_list[dcNum])
-    
+            sender.setConn(State.dc_list[dcNum])
+            sender.start()            
+            
     @staticmethod
     def onRecReqVoteRPCReply(message):
     
         if(message.term==State.currentTerm):
             if(message.voteGranted and State.receiverList[message.voterId]):
                 Candidate.incrementVoteCount()
+                print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Datacenter '+str(message.voterId)+' voted YES!'+'  Vote count: '+str(State.voteCount)) 
+                
             State.receiverList[message.voterId]=False
             print(message.voterId)
         elif(message.term<State.currentTerm):

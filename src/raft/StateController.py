@@ -32,6 +32,7 @@ class StateController(State):
         elif(StateController.eql(State.state,'candidate')):
             self.sendReqVoteRPC(dcNum)
         StateController.setPeriod(dcNum)
+        
             
     def isTimeout(self,currentTime):
         if(StateController.eql(State.state,'leader')):
@@ -68,23 +69,22 @@ class StateController(State):
         elif(StateController.eql(State.state,'candidate')):
             #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Candidate')
             Candidate.reset()
-            for dcNum in range(State.dc_ID):
-                self.onPeriodEnd(dcNum)
             StateController.setTimer()
-            
+            for dcNum in range(State.dc_ID):
+                self.onPeriodEnd(dcNum)            
         elif(StateController.eql(State.state,'leader')):
             #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Resetting Leader')
             Leader.reset()
+            StateController.setTimer()
             for dcNum in range(State.dc_ID):
                 self.onPeriodEnd(dcNum)
-            StateController.setTimer()
             
         else: 
             print('Wrong Resetting!!!')    
 
     def onRecAppendEntriesRPC(self,message):
-        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive AppendEntriesRPC from: '+\
-              str(message.leaderId)+" term"+str(message.term))
+        #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive AppendEntriesRPC from: '+\
+              #str(message.leaderId)+" term"+str(message.term))
         
         if(StateController.eql(State.state,'follower')):
             reply=Follower.onRecAppendEntriesRPC(message)
@@ -95,29 +95,29 @@ class StateController(State):
         sender.send(self.dc_list[message.leaderId])  
     
     def onRecReqVoteRPC(self,message):
-        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive ReqVoteRPC from: '+\
-              str(message.candidateId)+" term"+str(message.term))
+        #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive ReqVoteRPC from: '+\
+              #str(message.candidateId)+" term"+str(message.term))
         
         if(StateController.eql(State.state,'follower')):
             reply=Follower.onRecReqVoteRPC(message)
         else:
             reply=Receiver.onRecReqVoteRPC(message)
         
-        print(reply.voteGranted)
+        #print(reply.voteGranted)
         sender=Sender('RequestVoteRPCReply',reply)
         sender.send(self.dc_list[message.candidateId])
     
     def onRecAppendEntriesRPCReply(self,message):
-        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive AppendEntriesRPCReply from: '+\
-              str(message.followerId)+" "+str(message.success)+" "+str(message.matchIndex)+" term"+str(message.term))
-        if(StateController.eql(State.state,'Leader')):
+        #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive AppendEntriesRPCReply from: '+\
+              #str(message.followerId)+" "+str(message.success)+" "+str(message.matchIndex)+" term"+str(message.term))
+        if(StateController.eql(State.state,'leader')):
             Leader.onRecAppendEntriesRPCReply(message)
         else:
             pass  
     
     def onRecReqVoteRPCReply(self,message):
-        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive ReqVoteRPCReply from: '+\
-              str(message.voterId)+" "+str(message.voteGranted)+" term"+str(message.term))
+        #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Receive ReqVoteRPCReply from: '+\
+              #str(message.voterId)+" "+str(message.voteGranted)+" term"+str(message.term))
         
         if(StateController.eql(State.state,'candidate')):
             Candidate.onRecReqVoteRPCReply(message)
@@ -128,18 +128,19 @@ class StateController(State):
         
     def onMajorityGranted(self):
         Candidate.onMajorityGranted()
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): State Switch to Leader')
         self.reset()
     
     def isMajorityGranted(self):
         return Candidate.isMajorityGranted()
     
     def sendAppendEntriesRPC(self,dcNum):
-        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Send AppendEntriesRPC')
+        #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Send AppendEntriesRPC')
         
         Leader.sendAppendEntriesRPC(dcNum)
     
     def sendReqVoteRPC(self,dcNum):
-        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Send ReqVoteRPC')
+        #print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Send ReqVoteRPC')
         
         Candidate.sendReqVoteRPC(dcNum)
     

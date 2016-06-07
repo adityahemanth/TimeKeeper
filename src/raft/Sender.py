@@ -1,11 +1,21 @@
 import socket
 import pickle
+import threading
 from Message import Message
-class Sender(object):
+
+class Sender(threading.Thread):
     
     def __init__(self,type,obj):
+        
+        threading.Thread.__init__(self)
         self.type=type
         self.obj=obj
+    
+    def setConn(self,conn):
+        self.conn=conn
+    
+    def run(self):
+        self.send(self.conn);
     
     def send(self, conn):
         s = socket.socket()
