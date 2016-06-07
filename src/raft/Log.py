@@ -6,6 +6,7 @@ Created on 25 May 2016
 
 from LogItem import LogItem
 from Post import Post
+import pickle
 
 class Log(object):
     
@@ -13,25 +14,54 @@ class Log(object):
 
     def __init__(self,numOfDc):
         
-        self.log=[]
+        try:
+            f.open('log.txt')
+            self.log = pickle.loads( f.read() )
+
+        except:
+            self.log=[]
+            self.log.append(LogItem(Post(0,0,0),0,0))
         
-        self.versionNumList=[]
-        for dcNum in range(numOfDc):
-            self.versionNumList.append(0)
+        try:
+            self.versionNumList = pickle.loads( open('versionNumber.txt').read() )
+
+        except:
+            self.versionNumList=[]
+            for dcNum in range(numOfDc):
+                self.versionNumList.append(0)
         
-        self.log.append(LogItem(Post(0,0,0),0,0))
-        self.posts=[]
-        self.commitIndex=0
+
+        try:
+            self.commitIndex = pickle.loads( open('commitIndex.txt').read() )
+
+        except:
+            self.commitIndex= 0
+
+
                 
     def append(self,logItem):
         if(logItem==None):
             pass
         else:
             if(self.checkPost(logItem.post)):
+
                 self.log.append(logItem)
                 self.incrementVersionNumber(logItem.post)
-                self.posts.append(logItem.post.post)
-                
+
+                try:
+                    f = open('log.txt', 'w')
+                    f.write( pickle.dumps(self.log) )
+                    f.close()
+                except:
+                    pass
+
+                try:
+                    f = open('versionNumList.txt', 'w')
+                    f.write( pickle.dumps(self.versionNumList) )
+                    f.close()
+                except:
+                    pass
+               
                 #print('Appending new Entry: '+str(self.getLastIndex()));
                 #self.display()
     def setLogItem(self,logItem,index):
@@ -40,6 +70,13 @@ class Log(object):
                 
     def setCommitIndex(self,commitIndex):
         self.commitIndex=commitIndex 
+        try:
+            f = open('commitIndex.txt', 'w')
+            f.write( pickle.dumps(self.commitIndex) )
+            f.close()
+        except:
+            pass
+
     
     def incrementVersionNumber(self,post):
         self.versionNumList[post.dc_Id]=post.versionNumber

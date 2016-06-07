@@ -72,7 +72,7 @@ class Client(object):
     def lookupLog(self):
         s = socket.socket()
         
-        dcNum = input("Enter datacenter number: ")
+        dcNum = raw_input("Enter datacenter number: ")
         dcNum=int(dcNum)
         
         conn = self.dc_list[dcNum]
@@ -92,7 +92,7 @@ class Client(object):
         
     def createPost(self):
         
-        pst = input("Enter post: ")
+        pst = raw_input("Enter post: ")
         self.incrementVersionNumber()
         p = Post(self.dc_Id, pst, self.versionNumber)
         msg = Message('CreatePost', p)
@@ -121,10 +121,9 @@ class Client(object):
                     rcv = s.recv(4096)
                     rcvMsg = pickle.loads(rcv)
                     if(rcvMsg):
-                        print("Accepted! By DC "+str(self.leaderId))
+                        print("Accepted! By DC ")
                         break
                     else:
-                        print("Denied! By DC "+str(self.leaderId))
                         self.nextLeaderId()
                 s.close();
                     
@@ -165,7 +164,7 @@ def main():
 
     while True:
 
-        ipt = input("$ ")
+        ipt = raw_input("$ ")
         if(ipt == "lookup"):
             client.lookup()
 
