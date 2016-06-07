@@ -34,6 +34,9 @@ class Log(object):
                 
                 #print('Appending new Entry: '+str(self.getLastIndex()));
                 #self.display()
+    def setLogItem(self,logItem,index):
+        if(self.getLogItem(index)==None):            
+            self.append(logItem)
                 
     def setCommitIndex(self,commitIndex):
         self.commitIndex=commitIndex 

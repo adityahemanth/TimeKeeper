@@ -134,6 +134,28 @@ class State(object):
         State.timerStart=time.time()
     
     @staticmethod
+    def configChange(dc_list):
+        
+        numAdded=len(dc_list)-len(State.dc_list);
+        State.setDcList(dc_list)
+        State.setNumOfDc(len(dc_list))
+        State.setMajorityNum()
+        
+        if(numAdded<=0):
+            pass
+        else:
+            for i in range(numAdded):
+                State.periodTime.append(0.0)
+                State.periodStart.append(0.0)
+                State.setPeriod(State.numOfDc-numAdded+i)
+                if(State.eql(State.state,'leader')):
+                    State.matchIndex.append(0)
+                    State.nextIndex.append(State.log.getLastIndex()+1)
+                    State.matchSuccess.append(False)
+                elif(State.eql(State.state,'candidate')):
+                    State.receiverList.append(True)
+    
+    @staticmethod
     def eql(a,b):
         return (a==b)
     

@@ -12,8 +12,8 @@ class Client(object):
     
     def __init__(self,dc_Id):
         
-        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003),\
-               ("127.0.0.1",8004),("127.0.0.1",8005)]
+        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]
+        
         self.dc_list=list
         self.numOfDc=len(self.dc_list)
         self.versionNumber=0
@@ -39,7 +39,37 @@ class Client(object):
         log.displayPosts()
         
         s.close()
+    def configChange(self):
+        s = socket.socket()
+        
+        self.dc_list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003),\
+               ("127.0.0.1",8004),("127.0.0.1",8005)]
+        self.numOfDc=len(self.dc_list)
+        
+        msg = Message('ConfigChange', self.dc_list)
             
+        send = pickle.dumps(msg,0)
+        
+        for dcNum in range(self.numOfDc):
+            s = socket.socket()
+        
+            conn = self.dc_list[dcNum]
+            try:    
+                s.connect(conn)
+                success=True
+            
+            except Exception as e:
+                print("No connection! From DC "+str(dcNum))
+                success=False
+                continue
+            finally:
+                if(success):
+                    s.send(send)
+                    rcv = s.recv(4096)
+                    print(pickle.loads(rcv))
+                    
+                s.close()
+                
     def lookupLog(self):
         s = socket.socket()
         
@@ -79,7 +109,7 @@ class Client(object):
                 success=True
             
             except Exception as e:
-                print("No connection1! From DC "+str(self.leaderId))
+                print("No connection! From DC "+str(self.leaderId))
                 print(e)
                 success=False
                 self.nextLeaderId()
@@ -92,7 +122,7 @@ class Client(object):
                     rcv = s.recv(4096)
                     rcvMsg = pickle.loads(rcv)
                     if(rcvMsg):
-                        print("Acceped! By DC "+str(self.leaderId))
+                        print("Accepted! By DC "+str(self.leaderId))
                         break
                     else:
                         print("Denied! By DC "+str(self.leaderId))
@@ -145,6 +175,8 @@ def main():
 
         elif(ipt == "lookuplog"):
             client.lookupLog()
+        elif(ipt == "configChange"):
+            client.configChange()
         else:
             print("invalid input")
 

@@ -77,16 +77,18 @@ class Follower(State):
                 else:
                     print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Accepted entry '+str(message.entry.getIndex())+' from datacenter '+str(message.leaderId)) 
                 
-                if(message.prevLogIndex+1>State.log.getLastIndex()):
-                    State.log.append(message.entry)
+                if(message.prevLogIndex==State.log.getLastIndex()):
+                    State.log.setLogItem(message.entry,message.prevLogIndex+1)
                     matchIndex=State.log.getLastIndex()
                 
                 success=True
                 Follower.checkCommit(message)
             else:
                 times=State.log.getLastIndex()-message.prevLogIndex+1
+                print('Mismatched: '+str(State.log.getLastIndex())+" "+str(message.prevLogIndex))
                 if(times>0):
                     for i in range(times):
+                        print('delete!!!')
                         State.log.deleteLogItem()
                 matchIndex=0
                 success=False 

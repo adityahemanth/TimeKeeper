@@ -22,8 +22,7 @@ class Datacenter(threading.Thread,StateController,ClientReqHandler):
         super(Datacenter, self).__init__()
 #        list=[('0.0.0.0',12346)]
 #        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]
-        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003),\
-               ("127.0.0.1",8004),("127.0.0.1",8005)]#         
+        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]#         
         State.init(int(dc_ID),len(list),3.0,list,"0.0.0.0",list[int(dc_ID)][1])
     
     def run(self):
@@ -75,6 +74,8 @@ class Datacenter(threading.Thread,StateController,ClientReqHandler):
                 c.send(pickle.dumps(msg,0))
             elif(self.eql(mtype, 'GetDcId')):
                 c.send(State.dc_Id)
+            elif(self.eql(mtype,'ConfigChange')):
+                self.onRecConfigChangeReq(obj, c)
             else:
                 print('Invalid message type!!!')  
             

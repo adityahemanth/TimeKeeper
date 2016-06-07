@@ -24,5 +24,8 @@ class ClientReqHandler(object):
             c.send(pickle.dumps(True,0))
             
     
-            
-            
+    def onRecConfigChangeReq(self,message,c):
+        
+        print("("+str(State.dc_ID)+","+State.state+","+str(State.currentTerm)+'): Config changes!')
+        State.configChange(message)
+        c.send(pickle.dumps('Datacenter '+str(State.dc_ID)+' receives config changes!',0))
