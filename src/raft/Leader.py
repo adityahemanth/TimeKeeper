@@ -17,7 +17,7 @@ class Leader(State):
     def resetNextIndex():
         State.nextIndex=[]
         State.matchSuccess=[] 
-        for dcNum in range(State.numOfDc):
+        for dcNum in range(State.totalNumOfDc):
             State.nextIndex.append(State.log.getLastIndex()+1)
             State.matchSuccess.append(False)
             State.matchIndex.append(0)

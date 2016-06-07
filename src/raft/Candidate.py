@@ -24,7 +24,7 @@ class Candidate(State):
     @staticmethod
     def resetReceiverList():
         State.receiverList=[]
-        for dcNum in range(State.numOfDc):
+        for dcNum in range(State.totalNumOfDc):
             State.receiverList.append(True)
     
     @staticmethod

@@ -22,8 +22,10 @@ class Datacenter(threading.Thread,StateController,ClientReqHandler):
         super(Datacenter, self).__init__()
 #        list=[('0.0.0.0',12346)]
 #        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]
-        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]#         
-        State.init(int(dc_ID),len(list),3.0,list,"0.0.0.0",list[int(dc_ID)][1])
+        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003),\
+               ("127.0.0.1",8004),("127.0.0.1",8005)]#         
+        dc = [1,2,3]
+        State.init(int(dc_ID),len(list),3.0,list,"0.0.0.0",list[int(dc_ID)][1],dc)
     
     def run(self):
         
@@ -54,16 +56,28 @@ class Datacenter(threading.Thread,StateController,ClientReqHandler):
             
             if(self.eql(mtype,'AppendEntriesRPC')):
                 self.stepDown(obj)
-                self.onRecAppendEntriesRPC(obj)
+                if(obj.leaderId>=State.numOfDc):
+                    pass
+                else:
+                    self.onRecAppendEntriesRPC(obj)
             elif(self.eql(mtype,'AppendEntriesRPCReply')):
-                self.stepDown(obj)
-                self.onRecAppendEntriesRPCReply(obj)
+                if(obj.followerId>=State.numOfDc):
+                    pass
+                else:
+                    self.stepDown(obj)
+                    self.onRecAppendEntriesRPCReply(obj)
             elif(self.eql(mtype,'RequestVoteRPC')):
-                self.stepDown(obj)
-                self.onRecReqVoteRPC(obj)
+                if(obj.candidateId>=State.numOfDc):
+                    pass
+                else:
+                    self.stepDown(obj)
+                    self.onRecReqVoteRPC(obj)
             elif(self.eql(mtype,'RequestVoteRPCReply')):
-                self.stepDown(obj)
-                self.onRecReqVoteRPCReply(obj)
+                if(obj.voterId>=State.numOfDc):
+                    pass
+                else:
+                    self.stepDown(obj)
+                    self.onRecReqVoteRPCReply(obj)
             elif(self.eql(mtype, 'CreatePost')):
                 self.onRecCreatePostReq(obj,c)
             elif(self.eql(mtype,'Lookup')):

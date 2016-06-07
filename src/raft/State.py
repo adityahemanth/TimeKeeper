@@ -14,16 +14,18 @@ class State(object):
     '''
     
     @staticmethod
-    def init(dc_ID,numOfDc,timeUnit,dc_list,host,port):
+    def init(dc_ID,numOfDc,timeUnit,dc_list,host,port,dc):
         
         #Datacenter Info and Config
         State.setDcId(int(dc_ID))
-        State.setNumOfDc(int(numOfDc))
+        State.setNumOfDc(len(dc))
         State.setMajorityNum()
         State.setTimeUnit(float(timeUnit))
         State.setDcList(dc_list)
         State.setHost(host)
         State.setPort(port)
+        
+        State.totalNumOfDc=len(State.dc_list)
         
         #initialize State as 'follower'
         State.setState('follower')
@@ -31,7 +33,7 @@ class State(object):
         State.setTimer()
         State.periodTime=[]
         State.periodStart=[]
-        for dcNum in range(State.numOfDc):
+        for dcNum in range(State.totalNumOfDc):
             State.periodTime.append(0.0)
             State.periodStart.append(0.0)
             State.setPeriod(dcNum)
@@ -47,7 +49,7 @@ class State(object):
         State.matchIndex=[]
         
         #Log and commit Info
-        State.log=Log(State.numOfDc)
+        State.log=Log(State.totalNumOfDc)
         State.setCommitIndex(0)
         State.setLastApplied(0)
 
@@ -134,27 +136,23 @@ class State(object):
         State.timerStart=time.time()
     
     @staticmethod
-    def configChange(dc_list):
+    def configChange(dc):
         
-        numAdded=len(dc_list)-len(State.dc_list);
-        State.setDcList(dc_list)
-        State.setNumOfDc(len(dc_list))
+        State.setNumOfDc(dc+1)
         State.setMajorityNum()
         
-        if(numAdded<=0):
-            pass
-        else:
-            for i in range(numAdded):
-                State.periodTime.append(0.0)
-                State.periodStart.append(0.0)
-                State.setPeriod(State.numOfDc-numAdded+i)
-                if(State.eql(State.state,'leader')):
-                    State.matchIndex.append(0)
-                    State.nextIndex.append(State.log.getLastIndex()+1)
-                    State.matchSuccess.append(False)
-                elif(State.eql(State.state,'candidate')):
-                    State.receiverList.append(True)
-    
+#         for i in range(numAdded):
+#             State.periodTime.append(0.0)
+#             State.periodStart.append(0.0)
+#             State.setPeriod(State.numOfDc-numAdded+i)
+#                 if(State.eql(State.state,'leader')):
+#                     State.matchIndex.append(0)
+#                     State.nextIndex.append(State.log.getLastIndex()+1)
+#                     State.matchSuccess.append(False)
+#                 elif(State.eql(State.state,'candidate')):
+#                     State.receiverList.append(True)
+#     
+
     @staticmethod
     def eql(a,b):
         return (a==b)

@@ -12,9 +12,10 @@ class Client(object):
     
     def __init__(self,dc_Id):
         
-        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003)]
+        list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003),\
+               ("127.0.0.1",8004),("127.0.0.1",8005)]
         
-        self.dc_list=list
+        self.dc_list=list 
         self.numOfDc=len(self.dc_list)
         self.versionNumber=0
         self.dc_Id=dc_Id
@@ -42,11 +43,9 @@ class Client(object):
     def configChange(self):
         s = socket.socket()
         
-        self.dc_list=[("127.0.0.1",8001),("127.0.0.1",8002),("127.0.0.1",8003),\
-               ("127.0.0.1",8004),("127.0.0.1",8005)]
-        self.numOfDc=len(self.dc_list)
+        dc_no = int(input('$ DC ID: '))
         
-        msg = Message('ConfigChange', self.dc_list)
+        msg = Message('ConfigChange', dc_no)
             
         send = pickle.dumps(msg,0)
         
