@@ -11,7 +11,6 @@ from Log import Log
 from LogItem import LogItem
 from State import State
 import threading
-from ctypes.test.test_incomplete import MyTestCase
 from ClientReqHandler import ClientReqHandler
 from Message import Message
 
