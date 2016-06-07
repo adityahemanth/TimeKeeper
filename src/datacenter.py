@@ -98,6 +98,7 @@ class datacenter:
 			c.close()
 
 	def config(self):
+
 		self.dc_list = input("Input config:")
 		print(self.dc_list)
 		print(self.dc_ID)
@@ -110,6 +111,7 @@ class datacenter:
 		self.host=host
 	def setPort(self,port):
 		self.port=port
+
 
 def main():
 
